@@ -1,35 +1,25 @@
-const { MongoClient } = require("mongodb");
 
-const uri = "mongodb+srv://Administrator:vsMqmkw2oR2c5KtJ@cluster0.o4mys.mongodb.net/CycloneAviation?retryWrites=true&w=majority";
+const express = require('express');
+const mongoose = require('mongoose');
+const app = express(); 
+const bodyParser = require('body-parser');
+require('dotenv/config');
 
-const client = new MongoClient(uri);
+// routes 
+const employeeRoutes = require('./routes/employee');
 
-async function run() {
+app.use(bodyParser.json());
 
-    try {
-        // Connect to the MongoDB cluster
-        await client.connect();
-        await findByFirstName(client, "Silvia");
- 
-    } catch (e) {
-        console.error(e);
-    } finally {
-        await client.close();
-    }
+app.get('/', (req, res) => {
+    res.send("Hello we are on home");
+});
 
-}
+app.use('/employee', employeeRoutes);
 
-run().catch(console.dir);
+mongoose.connect(
+    process.env.MONGODB_URI, 
+    { userNewUrlParser: true }, 
+    () => console.log("connected to db")
+);
 
-
-/**
-* Searches the CustomerJSON's document to find an employee with the given first name and prints out the Employee object.
-*/
-async function findByFirstName(client, name){
-
-    const collection = client.db("CycloneAviation").collection("CustomerJSONs");
-
-    collection.findOne({firstName: name}, function(err, item) {
-        console.log(item);
-    });
-};
+app.listen(3000);
