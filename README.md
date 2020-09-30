@@ -1,7 +1,19 @@
 Mongo Atlas: 
 
-- Go to cluster console, navigate to network access and add your local ipv4 to the access list
-- clone this repository and make sure that you have node installed
-- npm install
-- npm start
-- go to localhost:3000 to interface with the database 
+# Set Up
+
+### Install dependencies
+
+Navigate to project and install dependencies with npm:
+
+`npm install`
+
+### Connect to MongoDB Cluster
+
+[Add your IP address to MongoDB Atlas](https://docs.atlas.mongodb.com/security/ip-access-list/#add-ip-access-list-entries).
+You will only be able to connect to the cluster from the IP addresses added to the account.
+
+### Run application
+ `npm start`
+ 
+ Listen to the server at `localhost:3000` 
