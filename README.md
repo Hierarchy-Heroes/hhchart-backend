@@ -1,5 +1,3 @@
-Mongo Atlas: 
-
 # Set Up
 
 ### Install dependencies
