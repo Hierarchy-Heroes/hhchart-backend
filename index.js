@@ -1,11 +1,11 @@
 
 const express = require('express');
 const mongoose = require('mongoose');
-const app = express(); 
+const app = express();
 const bodyParser = require('body-parser');
 require('dotenv/config');
 
-// routes 
+// routes
 const employeeRoutes = require('./routes/employee');
 
 app.use(bodyParser.json());
@@ -14,11 +14,11 @@ app.get('/', (req, res) => {
     res.send("Hello we are on home");
 });
 
-app.use('/employee', employeeRoutes);
+app.use('/employees', employeeRoutes);
 
 mongoose.connect(
-    process.env.MONGODB_URI, 
-    { userNewUrlParser: true }, 
+    process.env.MONGODB_URI,
+    { userNewUrlParser: true },
     () => console.log("connected to db")
 );
 
