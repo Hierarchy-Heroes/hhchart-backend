@@ -3,8 +3,8 @@ const router = express.Router();
 
 router.get('/:company', async (req, res) => {
     try {
+        //passes in collection name (in this case, the company)
         //TODO: modify collection name to get the company from the currently logged in user
-        //pass in collection name (in this case, the company)
         const Employee = require('../models/Employee')(req.params.company);
         const employees = await Employee.find();
         res.json(employees);
@@ -19,8 +19,8 @@ router.get('/employee/:employeeId', (req, res) => {
 
 /* create a new employee */
 router.post('/', async (req, res) => {
+    //passes in collection name (in this case, the company)
     //TODO: modify collection name to get the company from the currently logged in user
-    //pass in collection name (in this case, the company)
     const Employee = require('../models/Employee')(req.body.companyName.replace(/\s/g,''));
     const newEmployee = new Employee({
         firstName: req.body.firstName,
