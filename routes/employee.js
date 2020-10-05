@@ -1,6 +1,8 @@
+
 const express = require('express');
 const router = express.Router();
 const Employee = require('../models/Employee');
+const { validateEmployee, emailInUse } = require('../validation');
 
 router.get('/', async (req, res) => {
     try {
@@ -11,10 +13,25 @@ router.get('/', async (req, res) => {
             message: err
         });
     }
-})
+});
+
+// TODO: refactor this to make it more modular 
 
 /* create a new employee */
 router.post('/', async (req, res) => {
+
+    const { error } = validateEmployee(req.body);
+    if (error) {
+        res.status(400).send(error.details[0].message);
+    }
+
+    const credentialsExists = await emailInUse(req.body.email, res);
+    if (credentialsExists) {
+        res.status(400).send('credential already in use'); 
+    }
+
+    // encrypt password 
+
     const newEmployee = new Employee({
         firstName: req.body.firstName,
         lastName: req.body.lastName,
@@ -28,13 +45,6 @@ router.post('/', async (req, res) => {
         startDate: req.body.startDate,
     });
 
-    // TODO: move to createEmployee method 
-    const { error } = validateEmployee(req.body);
-
-    if (error) {
-        res.status(400).send(error.details[0].message);
-    }
-
     try {
         const savedEmployee = await newEmployee.save();
         res.json(savedEmployee);
@@ -43,6 +53,6 @@ router.post('/', async (req, res) => {
             message: err
         });
     }
-})
+}); 
 
 module.exports = router;

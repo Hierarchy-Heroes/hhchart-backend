@@ -12,7 +12,7 @@ const authRoutes = require('./routes/auth');
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
-    res.send("Hello we are on home");
+    res.send("Home Page");
 });
 
 app.use('/employee', employeeRoutes);
@@ -21,7 +21,7 @@ app.use('/auth', authRoutes);
 mongoose.connect(
     process.env.MONGODB_URI,
     { useNewUrlParser: true },
-    () => console.log("connected to db")
+    () => console.log("Connected to DB")
 );
 
 app.listen(3000);
