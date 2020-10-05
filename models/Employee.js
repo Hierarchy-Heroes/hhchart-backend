@@ -27,4 +27,6 @@ const EmployeeSchema = mongoose.Schema({
     }
 });
 
+// TODO: validateEmployee method.
+
 module.exports = mongoose.model('Employee', EmployeeSchema); 

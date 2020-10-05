@@ -7,6 +7,7 @@ require('dotenv/config');
 
 // routes 
 const employeeRoutes = require('./routes/employee');
+const authRoutes = require('./routes/auth');
 
 app.use(bodyParser.json());
 
@@ -15,10 +16,11 @@ app.get('/', (req, res) => {
 });
 
 app.use('/employee', employeeRoutes);
+app.use('/auth', authRoutes);
 
 mongoose.connect(
     process.env.MONGODB_URI, 
-    { userNewUrlParser: true }, 
+    { useNewUrlParser: true }, 
     () => console.log("connected to db")
 );
 
