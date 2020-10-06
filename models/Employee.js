@@ -33,4 +33,6 @@ const EmployeeSchema = mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Employee', EmployeeSchema); 
+module.exports = function(collectionName) {
+    return mongoose.model('Employee', EmployeeSchema, collectionName); ;
+};

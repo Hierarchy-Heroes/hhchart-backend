@@ -5,7 +5,7 @@ const app = express();
 const bodyParser = require('body-parser');
 require('dotenv/config');
 
-// routes 
+// routes
 const employeeRoutes = require('./routes/employee');
 const authRoutes = require('./routes/auth');
 
@@ -15,7 +15,8 @@ app.get('/', (req, res) => {
     res.send("Home Page");
 });
 
-app.use('/employee', employeeRoutes);
+app.use('/employees', employeeRoutes);
+
 app.use('/auth', authRoutes);
 
 mongoose.connect(
