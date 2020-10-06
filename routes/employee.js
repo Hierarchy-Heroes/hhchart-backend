@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const fs = require("fs");
-
+const fs = require("fs")
+const { verifyToken, verifyManager } = require('../verification');
+const { validateEmployee, emailInUse } = require('../validation');;
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
@@ -17,7 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage: storage})
 
-router.get('/:companyName', async (req, res) => {
+router.get('/:companyName', verifyToken, verifyManager, async (req, res) => {
     try {
         //passes in collection name (in this case, the company)
         //TODO: modify collection name to get the company from the currently logged in user
@@ -25,7 +26,9 @@ router.get('/:companyName', async (req, res) => {
         const employees = await Employee.find();
         res.json(employees);
     } catch (err) {
-        res.json({ message : err });
+        res.json({
+            message: err
+        });
     }
 });
 
@@ -39,7 +42,7 @@ Parses uploaded JSON file and imports all employee data to company's collection.
 router.post('/import', upload.single("upload"), async(req, res) => {
   //passes in collection name (in this case, the company)
   //TODO: modify collection name to get the company from form input
-  // const Employee = require('../models/Employee')(req.body.companyName.replace(/\s/g,''));
+  // const Employee = require('../models/Employee')(req.body.company.replace(/\s/g,''));
 
   //hardcoded collection for now
   const Employee = require('../models/Employee')("CycloneAviation");
@@ -69,14 +72,30 @@ router.post('/import', upload.single("upload"), async(req, res) => {
 });
 
 /* create a new employee */
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
+    const { error } = validateEmployee(req.body);
+  
+    if (error) {
+        res.status(400).send(error.details[0].message);
+    }
+
+    const credentialsExists = await emailInUse(req.body.email, res);
+    if (credentialsExists) {
+        res.status(400).send('credential already in use'); 
+    }
+
+    // encrypt password 
+  
     const Employee = require('../models/Employee')(req.body.companyName.replace(/\s/g,''));
     const newEmployee = createEmployee(Employee, req.body);
+  
     try {
         const savedEmployee = await newEmployee.save();
         res.json(savedEmployee);
     } catch (err) {
-        res.json({ message : err });
+        res.json({
+            message: err
+        });
     }
 });
 
@@ -96,6 +115,5 @@ function createEmployee(Employee, employeeData) {
 
   return employeeObj;
 }
-
 
 module.exports = router;

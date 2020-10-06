@@ -1,7 +1,10 @@
 
 const mongoose = require('mongoose');
-const helpers = require('../helper');
+const helpers = require('../misc/helper');
 
+// idea: hold some defaults for the company so we 
+// can set default for email as first char of fname and lastname
+//  @company domain
 const EmployeeSchema = mongoose.Schema({
     firstName: {
         type: String,
@@ -15,7 +18,10 @@ const EmployeeSchema = mongoose.Schema({
     password: String,
     positionTitle: String,
     companyName: String,
-    isManager: Boolean,
+    isManager: {
+        type: Boolean,
+        default: false
+    },
     employeeId: Number,
     email: {
         type: String,
