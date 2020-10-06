@@ -2,9 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const Employee = require('../models/Employee');
+const { verifyToken, verifyManager } = require('../verification')
 const { validateEmployee, emailInUse } = require('../validation');
 
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, verifyManager, async (req, res) => {
     try {
         const employees = await Employee.find();
         res.json(employees);
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
 // TODO: refactor this to make it more modular 
 
 /* create a new employee */
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
 
     const { error } = validateEmployee(req.body);
     if (error) {

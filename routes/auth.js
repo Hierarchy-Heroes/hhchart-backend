@@ -1,10 +1,10 @@
 
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const { validateLogin, emailInUse, matchPassword } = require('../validation');
 
 router.post('/login', async (req, res) => {
-    console.log(req.body);
     const { error } = validateLogin(req.body);
     if (error) {
         res.status(400).send(error.details[0].message);
@@ -21,13 +21,12 @@ router.post('/login', async (req, res) => {
     }
 
     // create and assign token to current user 
-
-
-    res.send('Logged in!');
+    const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: "2h"});
+    res.header('auth-token', token).send(token); 
 });
 
-router.post('/logout', async (res, res) => {
-    // relinquish token 
+router.post('/logout', async (req, res) => {
+    
 });
 
 module.exports = router; 
