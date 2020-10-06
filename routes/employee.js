@@ -38,7 +38,7 @@ Parses uploaded JSON file and imports all employee data to company's collection.
 */
 router.post('/import', upload.single("upload"), async(req, res) => {
   //passes in collection name (in this case, the company)
-  //TODO: modify collection name to get the company from the currently logged in user
+  //TODO: modify collection name to get the company from form input
   // const Employee = require('../models/Employee')(req.body.companyName.replace(/\s/g,''));
 
   //hardcoded collection for now
@@ -60,16 +60,16 @@ router.post('/import', upload.single("upload"), async(req, res) => {
 
   });
 
+  //send a response back
   res.json({"message": response});
 
+  //delete uploaded file after importing data
   fs.unlinkSync(req.file.path);
 
 });
 
 /* create a new employee */
 router.post('/', async (req, res) => {
-    //passes in collection name (in this case, the company)
-    //TODO: modify collection name to get the company from the currently logged in user
     const Employee = require('../models/Employee')(req.body.companyName.replace(/\s/g,''));
     const newEmployee = createEmployee(Employee, req.body);
     try {
