@@ -29,6 +29,7 @@ const validEmployeeSchema = Joi.object({
     employeeId: Joi.number(),
 
     email: Joi.string()
+        .email()
         .required(),
 
     startDate: Joi.string(),
@@ -36,6 +37,7 @@ const validEmployeeSchema = Joi.object({
 
 const validLoginCredentials = Joi.object({
     email: Joi.string()
+        .email()
         .required(),
 
     password: Joi.string()

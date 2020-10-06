@@ -11,18 +11,23 @@ router.post('/login', async (req, res) => {
     }
 
     const user = await emailInUse(req.body.email, res);
-    console.log(user === null)
     if (!user) {
         res.status(401).send('user not found');
     }
-    console.log(user)
     const passwordMatch = matchPassword(user.password, req.body.password); 
-    console.log(passwordMatch)
 
     if (!passwordMatch) {
         res.status(401).send('invalid password'); 
     }
+
+    // create and assign token to current user 
+
+
     res.send('Logged in!');
+});
+
+router.post('/logout', async (res, res) => {
+    // relinquish token 
 });
 
 module.exports = router; 
