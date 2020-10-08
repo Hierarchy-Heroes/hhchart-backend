@@ -1,48 +1,53 @@
-[ {
-  "firstName" : "Miquel",
-  "lastName" : "Pineda",
-  "companyId" : 1,
-  "password" : "pinedami",
-  "positionTitle" : "CEO",
-  "companyName" : "Cyclone Aviation",
-  "isManager" : true,
-  "employeeId" : 1,
-  "email" : "Miquel_Pineda@cycloneaviation.com",
-  "startDate" : "2016-05-04"
-}, {
-  "firstName" : "Reba",
-  "lastName" : "Strickland",
-  "companyId" : 1,
-  "password" : "stricklandre",
-  "positionTitle" : "Engineering Manager",
-  "companyName" : "Cyclone Aviation",
-  "isManager" : true,
-  "employeeId" : 2,
-  "managerId" : 1,
-  "email" : "Reba_Strickland@cycloneaviation.com",
-  "startDate" : "2010-12-12"
-}, {
-  "firstName" : "Suzette",
-  "lastName" : "Rhodes",
-  "companyId" : 1,
-  "password" : "rhodessu",
-  "positionTitle" : "Engineering Manager",
-  "companyName" : "Cyclone Aviation",
-  "isManager" : true,
-  "employeeId" : 3,
-  "managerId" : 1,
-  "email" : "Suzette_Rhodes@cycloneaviation.com",
-  "startDate" : "2011-12-23"
-}, {
-  "firstName" : "Brittany",
-  "lastName" : "Murillo",
-  "companyId" : 1,
-  "password" : "murillobr",
-  "positionTitle" : "Engineering Manager",
-  "companyName" : "Cyclone Aviation",
-  "isManager" : true,
-  "employeeId" : 4,
-  "managerId" : 2,
-  "email" : "Brittany_Murillo@cycloneaviation.com",
-  "startDate" : "1999-08-06"
-}]
+[
+  {
+    "firstName": "Miquel",
+    "lastName": "Pineda",
+    "companyId": 1,
+    "password": "pinedami",
+    "positionTitle": "CEO",
+    "companyName": "Cyclone Aviation",
+    "isManager": true,
+    "employeeId": 1,
+    "email": "Miquel_Pineda@cycloneaviation.com",
+    "startDate": "2016-05-04"
+  },
+  {
+    "firstName": "Reba",
+    "lastName": "Strickland",
+    "companyId": 1,
+    "password": "stricklandre",
+    "positionTitle": "Engineering Manager",
+    "companyName": "Cyclone Aviation",
+    "isManager": true,
+    "employeeId": 2,
+    "managerId": 1,
+    "email": "Reba_Strickland@cycloneaviation.com",
+    "startDate": "2010-12-12"
+  },
+  {
+    "firstName": "Suzette",
+    "lastName": "Rhodes",
+    "companyId": 1,
+    "password": "rhodessu",
+    "positionTitle": "Engineering Manager",
+    "companyName": "Cyclone Aviation",
+    "isManager": true,
+    "employeeId": 3,
+    "managerId": 1,
+    "email": "Suzette_Rhodes@cycloneaviation.com",
+    "startDate": "2011-12-23"
+  },
+  {
+    "firstName": "Brittany",
+    "lastName": "Murillo",
+    "companyId": 1,
+    "password": "murillobr",
+    "positionTitle": "Engineering Manager",
+    "companyName": "Cyclone Aviation",
+    "isManager": true,
+    "employeeId": 4,
+    "managerId": 2,
+    "email": "Brittany_Murillo@cycloneaviation.com",
+    "startDate": "1999-08-06"
+  }
+]

@@ -7,7 +7,7 @@ const Employee = require('../models/Employee')("CycloneAviation");
  */
 const findEmployee = async (query) => {
     const employee = await Employee.findOne(query);
-    return employee; 
-}; 
+    return employee;
+};
 
 module.exports.findEmployee = findEmployee;
