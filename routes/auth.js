@@ -14,7 +14,8 @@ router.post('/login', async (req, res) => {
     if (!user) {
         res.status(401).send('user not found');
     }
-    const passwordMatch = matchPassword(user.password, req.body.password); 
+
+    const passwordMatch = matchPassword(req.body.password, user.password); 
 
     if (!passwordMatch) {
         res.status(401).send('invalid password'); 

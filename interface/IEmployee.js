@@ -1,5 +1,5 @@
 
-const Employee = require('../models/Employee');
+const Employee = require('../models/Employee')("CycloneAviation");
 
 /**
  * Retrieves a user that matches specified properties if they exist. 
