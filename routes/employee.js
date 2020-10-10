@@ -7,6 +7,7 @@ const { validateEmployee, emailInUse } = require('../validation');;
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
+//A folder named "uploads" must exist in directory. 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
     cb(null, "uploads");
@@ -38,14 +39,19 @@ router.get('/employee/:employeeId', (req, res) => {
 
 /**
 Parses uploaded JSON file and imports all employee data to company's collection.
+The data POSTed must be of type multipart/form-data and the form field name for the file input
+must be "employeeJSON". A company field is also required with the name of the company the data belongs to.
 */
-router.post('/import', upload.single("upload"), async(req, res) => {
-  //passes in collection name (in this case, the company)
-  //TODO: modify collection name to get the company from form input
-  // const Employee = require('../models/Employee')(req.body.company.replace(/\s/g,''));
+router.post('/import', upload.single("employeeJSON"), async(req, res) => {
+  //if the company name is missing
+  if(req.body.company == undefined) {
+    res.status(400).send("Missing company name.");
+    fs.unlinkSync(req.file.path);
+    return;
+  }
 
-  //hardcoded collection for now
-  const Employee = require('../models/Employee')("CycloneAviation");
+  //passes in collection name (in this case, the company)
+  const Employee = require('../models/Employee')(req.body.company.replace(/\s/g,''));
 
   let response = "Employees uploaded successfully."
   fs.readFile(req.file.path, async function(err, data) {
@@ -74,21 +80,21 @@ router.post('/import', upload.single("upload"), async(req, res) => {
 /* create a new employee */
 router.post('/', verifyToken, async (req, res) => {
     const { error } = validateEmployee(req.body);
-  
+
     if (error) {
         res.status(400).send(error.details[0].message);
     }
 
     const credentialsExists = await emailInUse(req.body.email, res);
     if (credentialsExists) {
-        res.status(400).send('credential already in use'); 
+        res.status(400).send('credential already in use');
     }
 
-    // encrypt password 
-  
+    // encrypt password
+
     const Employee = require('../models/Employee')(req.body.companyName.replace(/\s/g,''));
     const newEmployee = createEmployee(Employee, req.body);
-  
+
     try {
         const savedEmployee = await newEmployee.save();
         res.json(savedEmployee);
