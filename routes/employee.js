@@ -45,31 +45,32 @@ The data POSTed must be of type multipart/form-data and the form field name for 
 must be "employeeJSON". A "company" field is also required with the name of the company the data belongs to.
 */
 
-router.post('/import', upload.single("employeeJSON"), async(req, res) => {
-  //if the company name is missing
-  if(req.body.company == undefined) {
-    res.status(400).send("Missing company name.");
-    fs.unlinkSync(req.file.path);
-    return;
-  }
-
-  //passes in collection name (in this case, the company)
-  const Employee = require('../models/Employee')(req.body.company.replace(/\s/g,''));
-
-  let response = "Employees uploaded successfully."
-  fs.readFile(req.file.path, async function(err, data) {
-    const str = String.fromCharCode.apply(String, data);
-    const employees = JSON.parse(data);
-
-    for(i in employees) {
-      const employeeObj = createEmployee(Employee, employees[i]);
-
-      try {
-          const savedEmployee = await employeeObj.save();
-      } catch (err) {
-          response = err.message;      }
+router.post('/import', upload.single("employeeJSON"), async (req, res) => {
+    //if the company name is missing
+    if (req.body.company == undefined) {
+        res.status(400).send("Missing company name.");
+        fs.unlinkSync(req.file.path);
+        return;
     }
-   });
+
+    //passes in collection name (in this case, the company)
+    const Employee = require('../models/Employee')(req.body.company.replace(/\s/g, ''));
+
+    let response = "Employees uploaded successfully."
+    fs.readFile(req.file.path, async function (err, data) {
+        const str = String.fromCharCode.apply(String, data);
+        const employees = JSON.parse(data);
+
+        for (i in employees) {
+            const employeeObj = createEmployee(Employee, employees[i]);
+
+            try {
+                const savedEmployee = await employeeObj.save();
+            } catch (err) {
+                response = err.message;
+            }
+        }
+    });
 
     //send a response back
     res.json({ "message": response });
@@ -112,8 +113,9 @@ router.post('/', async (req, res) => {
             });
         }
     });
+});
 
-function createEmployee(Employee, employeeData) {
+const createEmployee = (Employee, employeeData) => {
     const employeeObj = new Employee({
         firstName: employeeData.firstName,
         lastName: employeeData.lastName,
