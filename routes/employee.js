@@ -9,6 +9,7 @@ const { validateEmployee, emailInUse } = require('../validation');
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
+//A folder named "uploads" must exist in directory.
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, "uploads");
@@ -40,31 +41,35 @@ router.get('/employee/:employeeId', (req, res) => {
 
 /**
 Parses uploaded JSON file and imports all employee data to company's collection.
+The data POSTed must be of type multipart/form-data and the form field name for the file input
+must be "employeeJSON". A "company" field is also required with the name of the company the data belongs to.
 */
-router.post('/import', upload.single("upload"), async (req, res) => {
-    //passes in collection name (in this case, the company)
-    //TODO: modify collection name to get the company from form input
-    // const Employee = require('../models/Employee')(req.body.company.replace(/\s/g,''));
 
-    //hardcoded collection for now
-    const Employee = require('../models/Employee')("CycloneAviation");
+router.post('/import', upload.single("employeeJSON"), async(req, res) => {
+  //if the company name is missing
+  if(req.body.company == undefined) {
+    res.status(400).send("Missing company name.");
+    fs.unlinkSync(req.file.path);
+    return;
+  }
 
-    let response = "Employees uploaded successfully."
-    fs.readFile(req.file.path, async function (err, data) {
-        const str = String.fromCharCode.apply(String, data);
-        const employees = JSON.parse(data);
+  //passes in collection name (in this case, the company)
+  const Employee = require('../models/Employee')(req.body.company.replace(/\s/g,''));
 
-        for (i in employees) {
-            const employeeObj = createEmployee(Employee, employees[i]);
+  let response = "Employees uploaded successfully."
+  fs.readFile(req.file.path, async function(err, data) {
+    const str = String.fromCharCode.apply(String, data);
+    const employees = JSON.parse(data);
 
-            try {
-                const savedEmployee = await employeeObj.save();
-            } catch (err) {
-                response = err.message;
-            }
-        }
+    for(i in employees) {
+      const employeeObj = createEmployee(Employee, employees[i]);
 
-    });
+      try {
+          const savedEmployee = await employeeObj.save();
+      } catch (err) {
+          response = err.message;      }
+    }
+   });
 
     //send a response back
     res.json({ "message": response });
@@ -107,7 +112,6 @@ router.post('/', async (req, res) => {
             });
         }
     });
-});
 
 function createEmployee(Employee, employeeData) {
     const employeeObj = new Employee({
