@@ -10,11 +10,12 @@ router.post('/login', async (req, res) => {
         res.status(400).send(error.details[0].message);
     }
 
-    const user = await emailInUse(req.body.email, res);
+    const user = await emailInUse(req.body.email, req.body.companyName, res);
     if (!user) {
         res.status(401).send('user not found');
     }
-    const passwordMatch = matchPassword(user.password, req.body.password); 
+
+    const passwordMatch = matchPassword(req.body.password, user.password); 
 
     if (!passwordMatch) {
         res.status(401).send('invalid password'); 
@@ -26,7 +27,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/logout', async (req, res) => {
-    
+    // TODO 
 });
 
 module.exports = router; 

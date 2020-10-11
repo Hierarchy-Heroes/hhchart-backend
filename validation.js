@@ -1,5 +1,6 @@
 
 const Joi = require('@hapi/joi');
+const bcrypt = require('bcryptjs'); 
 const { findEmployee } = require('./interface/IEmployee');
 
 const validEmployeeSchema = Joi.object({
@@ -66,10 +67,11 @@ const validateLogin = (value) => {
  * verifies if the database contains a user associated with supplied email 
  * @param {*} email
  * @param {*} result print to result in case of error 
+ * @param {*} collectionName specifies the collection to parse in search 
  */
-const emailInUse = async (emailValue, res) => {
+const emailInUse = async (emailValue, collectionName, res) => {
     try {
-        const user = await findEmployee({email: emailValue}); 
+        const user = await findEmployee({email: emailValue}, collectionName); 
         return user; 
     } catch (err) {
         res.send(err);
@@ -78,12 +80,16 @@ const emailInUse = async (emailValue, res) => {
 
 /**
  * cross-references requested credentials with those stored in the database 
- * @param {*} userPassword password associated with the currently selected user 
+ * @param {*} userPassword password associated with the currently selected user, stored in db
  * @param {*} value password included in HTTP payload 
  */
-const matchPassword = (userPassword, value) => {
-    // TODO: change this to encrypted library implementation
-    return userPassword === value; 
+const matchPassword = async (value, userPassword) => {
+    bcrypt.compare(value, userPassword, (err, result) => {
+        if (err) {
+            console.log(err); 
+        }
+        return result; 
+    })  
 };
 
 module.exports = {
