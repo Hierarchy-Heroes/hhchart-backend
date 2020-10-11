@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -82,7 +83,7 @@ router.post('/', async (req, res) => {
         res.status(400).send(error.details[0].message);
     }
 
-    const credentialsExists = await emailInUse(req.body.email, res);
+    const credentialsExists = await emailInUse(req.body.email, req.body.companyName, res);
     if (credentialsExists) {
         res.status(400).send('credential already in use');
     }

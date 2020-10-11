@@ -67,10 +67,11 @@ const validateLogin = (value) => {
  * verifies if the database contains a user associated with supplied email 
  * @param {*} email
  * @param {*} result print to result in case of error 
+ * @param {*} collectionName specifies the collection to parse in search 
  */
-const emailInUse = async (emailValue, res) => {
+const emailInUse = async (emailValue, collectionName, res) => {
     try {
-        const user = await findEmployee({email: emailValue}); 
+        const user = await findEmployee({email: emailValue}, collectionName); 
         return user; 
     } catch (err) {
         res.send(err);
