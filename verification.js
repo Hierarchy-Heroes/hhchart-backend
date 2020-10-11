@@ -19,11 +19,13 @@ const verifyToken = (req, res, next) => {
 }; 
 
 const verifyManager = async (req, res, next) => {
-    const employee = await findEmployee({_id: req.user._id}, req.user.companyName); 
+    console.log(req.use); 
+    const employee = await findEmployee({_id: req.user._id}, req.body.companyName.replace(/\s/g, '')); 
     if (!employee) {
-        // error handling 
+        return res.status(404).send('Employee not found');  
     }
 
+    console.log(employee);
     if (employee.isManager) {
         next(); 
     } else {

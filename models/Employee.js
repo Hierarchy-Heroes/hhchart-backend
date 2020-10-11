@@ -23,6 +23,10 @@ const EmployeeSchema = mongoose.Schema({
         default: false
     },
     employeeId: Number,
+    managerId: {
+        type: Number,
+        required: true 
+    },
     email: {
         type: String,
         required: true,
@@ -30,7 +34,8 @@ const EmployeeSchema = mongoose.Schema({
     startDate: {
         type: String,
         default: helpers.formatDate(new Date()),
-    }
+    }, 
+    teamId: String
 });
 
 module.exports = function(collectionName) {

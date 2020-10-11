@@ -6,6 +6,8 @@ const bcrypt = require('bcryptjs');
 const fs = require("fs")
 const { verifyToken, verifyManager } = require('../verification');
 const { validateEmployee, emailInUse } = require('../validation');
+const { createTree, sanitizeJSON } = require('../treeConstruction'); 
+const { findEmployee } = require('../interface/IEmployee');
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
@@ -19,9 +21,21 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage })
+const upload = multer({ storage: storage });
 
-router.get('/:companyName', verifyToken, verifyManager, async (req, res) => {
+router.get('/:companyName/tree', verifyToken, verifyManager, async (req, res) => {
+    try {
+        const Employee = require('../models/Employee')(req.params.companyName);
+        const employees = await Employee.find();
+        res.json(createTree(sanitizeJSON(employees)));
+    } catch (err) {
+        res.json({
+            message: err
+        });
+    }
+});
+
+router.get('/:companyName/flat', verifyToken, async (req, res) => {
     try {
         //passes in collection name (in this case, the company)
         //TODO: modify collection name to get the company from the currently logged in user
@@ -35,8 +49,19 @@ router.get('/:companyName', verifyToken, verifyManager, async (req, res) => {
     }
 });
 
-router.get('/employee/:employeeId', (req, res) => {
-    res.send("We are looking at employee 1");
+/** 
+ * search the organization by teams, employees, and other 
+ * NOTE: query has to be a javascript opject  
+ */ 
+router.get('/:companyName/:query', async (req, res) => {
+    try {
+        const employee = await findEmployee(req.params.query, req.params.companyName); 
+        res.json(employee); 
+    } catch (err) {
+        res.json({
+            message: err
+        });
+    }
 });
 
 /**
@@ -125,6 +150,7 @@ const createEmployee = (Employee, employeeData) => {
         companyName: employeeData.companyName,
         isManager: employeeData.isManager,
         employeeId: employeeData.employeeId,
+        managerId: employeeData.managerId,
         email: employeeData.email,
         startDate: employeeData.startDate,
     });

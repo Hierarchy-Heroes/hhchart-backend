@@ -10,7 +10,7 @@ router.post('/login', async (req, res) => {
         res.status(400).send(error.details[0].message);
     }
 
-    const user = await emailInUse(req.body.email, req.body.companyName, res);
+    const user = await emailInUse(req.body.email, req.body.companyName.replace(/\s/g, ''), res);
     if (!user) {
         res.status(401).send('user not found');
     }
@@ -23,8 +23,13 @@ router.post('/login', async (req, res) => {
 
     // create and assign token to current user 
     const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: "2h"});
+    console.log(token);
     res.header('auth-token', token).send(token); 
 });
+
+router.post('/register', async (req, res) => {
+    // TODO 
+})
 
 router.post('/logout', async (req, res) => {
     // TODO 

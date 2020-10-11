@@ -41,6 +41,9 @@ const validLoginCredentials = Joi.object({
         .email()
         .required(),
 
+    companyName: Joi.string()
+        .required(), 
+
     password: Joi.string()
         .min(8)
         .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
