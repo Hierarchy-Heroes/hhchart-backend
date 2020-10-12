@@ -20,7 +20,7 @@ You will only be able to connect to the cluster from the IP addresses added to t
 # Endpoints
 
 `X = localhost:port`
-`{} = http body `
+`{} = http body`
 
 ### GET
 - Get employee tree: `X/employees/{company name}/tree`
@@ -29,14 +29,14 @@ You will only be able to connect to the cluster from the IP addresses added to t
    - Returns all of the employees in the company
 
 ### POST
-- Import employees: X/employees/import
+- Import employees: `X/employees/import`
    - Imports employee data from uploaded JSON file into database
    - Data posted must be of type `multipart/form-data` with two fields:
        - `employeeJSON` = employee JSON file user uploads
        - `company` = name of company data belongs to
 
 
-- Create new employee: X/employees
+- Create new employee: `X/employees`
    - Required body fields: `firstName`, `lastName`, `password`, `companyName`, `isManager`, `employeeId`, `managerId`, `email`
    - Other body fields: `companyId`, `positionTitle`, `startDate`
    - Adds a new employee for a company into the database
