@@ -23,7 +23,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.get('/:companyName/tree', verifyToken, verifyManager, async (req, res) => {
+// bug: verifyManager is undefined (because we are not sending the ID, how can you backtrack to who the user is with just the token...)
+router.get('/:companyName/tree', verifyToken, async (req, res) => {
     try {
         const Employee = require('../models/Employee')(req.params.companyName);
         const employees = await Employee.find();
@@ -107,7 +108,6 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
 
 /* create a new employee */
 router.post('/', async (req, res) => {
-    console.log("hello world")
     const { error } = validateEmployee(req.body);
 
     if (error) {
