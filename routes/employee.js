@@ -163,6 +163,10 @@ router.post('/:companyName/upload-image', upload.single("employeeImg"), async (r
 
   const employee = await findEmployee({employeeId: req.body.employeeId}, req.params.companyName);
 
+  if(!employee) {
+    return res.status(400).send("Invalid employee id.");
+  }
+
   employee.img = img;
 
   try {
