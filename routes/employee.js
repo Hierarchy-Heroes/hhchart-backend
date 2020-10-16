@@ -31,11 +31,16 @@ router.get('/:companyName/tree', verifyToken, async (req, res) => {
         res.json(createTree(sanitizeJSON(employees)));
     } catch (err) {
         res.json({
-            message: err
+            message: err.message
         });
     }
 });
 
+/* Employees with images will have an "img" attribute which has a "buffer" field
+* containing a "data" field that stores byte array of the image. In order to display the image,
+* employee.img.buffer.data must be converted to a base64 string.
+* Then you can set img.src to "data:image/png;base64," + {base64 image string}
+*/
 router.get('/:companyName/flat', verifyToken, async (req, res) => {
     try {
         //passes in collection name (in this case, the company)
@@ -138,6 +143,37 @@ router.post('/', async (req, res) => {
             });
         }
     });
+});
+
+/**
+* Upload an employee image and store it in their document.
+* Required body parameters: employeeId
+*/
+router.post('/:companyName/upload-image', upload.single("employeeImg"), async (req, res) => {
+  //if the company name is missing
+  if (req.body.employeeId == undefined) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).send("Missing employee ID.");
+  }
+
+  const img = {
+      data:  fs.readFileSync(req.file.path),
+      contentType: req.file.mimetype
+  };
+
+  const employee = await findEmployee({employeeId: req.body.employeeId}, req.params.companyName);
+
+  employee.img = img;
+
+  try {
+      await employee.save();
+      res.status(200).send("Employee image uploaded successfully.");
+  } catch (err) {
+      res.status(500).send(err.message);
+  }
+
+  fs.unlinkSync(req.file.path);
+
 });
 
 const createEmployee = (Employee, employeeData) => {

@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const helpers = require('../misc/helper');
 
-// idea: hold some defaults for the company so we 
+// idea: hold some defaults for the company so we
 // can set default for email as first char of fname and lastname
 //  @company domain
 const EmployeeSchema = mongoose.Schema({
@@ -34,7 +34,11 @@ const EmployeeSchema = mongoose.Schema({
     startDate: {
         type: String,
         default: helpers.formatDate(new Date()),
-    }, 
+    },
+    img: {
+      buffer: Buffer,
+      contentType: String
+    },
     teamId: String
 });
 
