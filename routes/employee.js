@@ -130,6 +130,11 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
 
 /* create a new employee */
 router.post('/', async (req, res) => {
+  //if manager id is missing, set to -1
+  if (req.body.managerId == undefined) {
+    req.body.managerId = Number(-1);
+  }
+
   const { error } = validateEmployee(req.body);
 
   if (error) {
