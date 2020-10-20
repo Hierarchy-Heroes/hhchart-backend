@@ -206,6 +206,7 @@ router.post('/:companyName/upload-image', upload.single("employeeImg"), async (r
 
 });
 
+/**
 * Creates a new Employee schema object with the passed in employee data.
 * @param {Schema} Employee
 * @param {Object} employeeData
