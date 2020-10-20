@@ -52,7 +52,7 @@ router.get('/:companyName/flat', verifyToken, async (req, res) => {
 
 /** 
  * search the organization by teams, employees, and other 
- * NOTE: query has to be a javascript opject  
+ * NOTE: query has to be a javascript object  
  */ 
 router.get('/:companyName/:query', async (req, res) => {
     try {
