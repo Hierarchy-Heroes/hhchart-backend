@@ -89,7 +89,6 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
     const company = req.body.company.replace(/\s/g, '');
 
     fs.readFile(req.file.path, async function (err, data) {
-        const str = String.fromCharCode.apply(String, data);
         const employees = JSON.parse(data);
 
         //delete uploaded file after importing data
