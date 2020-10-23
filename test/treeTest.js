@@ -26,7 +26,7 @@ describe('Simple Tree Construction', () => {
         assert(verifyTree(smallTreeRoot), true);
     });
     it('CEO is root', () => {
-        assert(smallTreeRoot.positionTitle === "CEO"); 
+        assert(smallTreeRoot.positionTitle === "CEO");
     });
 });
 
@@ -40,7 +40,7 @@ describe('Given Data Construction', () => {
         assert(verifyTree(cycloneAviationRoot), true);
     });
     it('CEO is root', () => {
-        assert(cycloneAviationRoot.positionTitle === "CEO"); 
+        assert(cycloneAviationRoot.positionTitle === "CEO");
     });
 });
 

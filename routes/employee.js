@@ -59,7 +59,7 @@ router.get('/:companyName/flat', verifyToken, async (req, res) => {
 /** 
  * search the organization by teams, employees, and other 
  * NOTE: query has to be a javascript object  
- */ 
+ */
 router.get('/:companyName/:query', async (req, res) => {
     try {
         const employee = await findEmployee(req.params.query, req.params.companyName);
@@ -95,36 +95,36 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
         fs.unlinkSync(req.file.path);
 
         for (i in employees) {
-          let employee = employees[i];
-          if (employee.managerId == undefined) {
-            employee.managerId = Number(-1);
-          }
+            let employee = employees[i];
+            if (employee.managerId == undefined) {
+                employee.managerId = Number(-1);
+            }
 
-          const { error } = validateEmployee(employee);
+            const { error } = validateEmployee(employee);
 
-          if (error) {
-              return res.status(400).send(error.details[0].message);
-          }
+            if (error) {
+                return res.status(400).send(error.details[0].message);
+            }
 
-          const credentialsExists = await emailInUse(employee.email, company, res);
+            const credentialsExists = await emailInUse(employee.email, company, res);
 
-          if (credentialsExists) {
-              return res.status(400).send("User: " + employee.email + " already exists.");
-          }
+            if (credentialsExists) {
+                return res.status(400).send("User: " + employee.email + " already exists.");
+            }
 
-          bcrypt.hash(employee.password, 10, async (err, hash) => {
-              if (err) {
-                  return res.send("Password encryption failed.");
-              }
-              employee.password = hash;
+            bcrypt.hash(employee.password, 10, async (err, hash) => {
+                if (err) {
+                    return res.send("Password encryption failed.");
+                }
+                employee.password = hash;
 
-              const employeeObj = createEmployee(Employee, employee);
-              try {
-                  const savedEmployee = await employeeObj.save();
-              } catch (err) {
-                  return res.status(500).send(err.message);
-              }
-          });
+                const employeeObj = createEmployee(Employee, employee);
+                try {
+                    const savedEmployee = await employeeObj.save();
+                } catch (err) {
+                    return res.status(500).send(err.message);
+                }
+            });
         }
 
         //send a response back
@@ -135,40 +135,40 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
 
 /* create a new employee */
 router.post('/', async (req, res) => {
-  //if manager id is missing, set to -1
-  if (req.body.managerId == undefined) {
-    req.body.managerId = Number(-1);
-  }
+    //if manager id is missing, set to -1
+    if (req.body.managerId == undefined) {
+        req.body.managerId = Number(-1);
+    }
 
-  const { error } = validateEmployee(req.body);
+    const { error } = validateEmployee(req.body);
 
-  if (error) {
-    return res.status(400).send(error.details[0].message);
-  }
+    if (error) {
+        return res.status(400).send(error.details[0].message);
+    }
 
-  const credentialsExists = await emailInUse(req.body.email, req.body.companyName.replace(/\s/g, ''), res);
+    const credentialsExists = await emailInUse(req.body.email, req.body.companyName.replace(/\s/g, ''), res);
 
-  if (credentialsExists) {
-    return res.status(400).send("User: " + req.body.email + " already exists.");
-  }
+    if (credentialsExists) {
+        return res.status(400).send("User: " + req.body.email + " already exists.");
+    }
 
-  // encrypt password
-  bcrypt.hash(req.body.password, 10, async (err, hash) => {
-      if (err) {
-          return res.send("Password encryption failed.");
-      }
-      req.body.password = hash;
+    // encrypt password
+    bcrypt.hash(req.body.password, 10, async (err, hash) => {
+        if (err) {
+            return res.send("Password encryption failed.");
+        }
+        req.body.password = hash;
 
-      const Employee = require('../models/Employee')(req.body.companyName.replace(/\s/g, ''));
-      const newEmployee = createEmployee(Employee, req.body);
+        const Employee = require('../models/Employee')(req.body.companyName.replace(/\s/g, ''));
+        const newEmployee = createEmployee(Employee, req.body);
 
-      try {
-          const savedEmployee = await newEmployee.save();
-          return res.status(200).send("Employee data uploaded successfully.");
-      } catch (err) {
-          return res.status(500).send(err.message);
-      }
-  });
+        try {
+            const savedEmployee = await newEmployee.save();
+            return res.status(200).send("Employee data uploaded successfully.");
+        } catch (err) {
+            return res.status(500).send(err.message);
+        }
+    });
 });
 
 /**
@@ -176,33 +176,33 @@ router.post('/', async (req, res) => {
 * Required body parameters: employeeId
 */
 router.post('/:companyName/upload-image', upload.single("employeeImg"), async (req, res) => {
-  //if the company name is missing
-  if (req.body.employeeId == undefined) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).send("Missing employee ID.");
-  }
+    //if the company name is missing
+    if (req.body.employeeId == undefined) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).send("Missing employee ID.");
+    }
 
-  const img = {
-      data:  fs.readFileSync(req.file.path),
-      contentType: req.file.mimetype
-  };
+    const img = {
+        data: fs.readFileSync(req.file.path),
+        contentType: req.file.mimetype
+    };
 
-  const employee = await findEmployee({employeeId: req.body.employeeId}, req.params.companyName);
+    const employee = await findEmployee({ employeeId: req.body.employeeId }, req.params.companyName);
 
-  if(!employee) {
-    return res.status(400).send("Invalid employee id.");
-  }
+    if (!employee) {
+        return res.status(400).send("Invalid employee id.");
+    }
 
-  employee.img = img;
+    employee.img = img;
 
-  try {
-      await employee.save();
-      res.status(200).send("Employee image uploaded successfully.");
-  } catch (err) {
-      res.status(500).send(err.message);
-  }
+    try {
+        await employee.save();
+        res.status(200).send("Employee image uploaded successfully.");
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 
-  fs.unlinkSync(req.file.path);
+    fs.unlinkSync(req.file.path);
 
 });
 
