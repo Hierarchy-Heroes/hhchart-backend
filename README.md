@@ -36,7 +36,7 @@ You will only be able to connect to the cluster from the IP addresses added to t
        - `company` = name of company data belongs to
 
 
-- Create new employee: `X/employees`
+- Create new employee: `X/employees/add`
    - Required body fields: `firstName`, `lastName`, `password`, `companyName`, `isManager`, `employeeId`, `managerId`, `email`
    - Other body fields: `companyId`, `positionTitle`, `startDate`
    - Adds a new employee for a company into the database

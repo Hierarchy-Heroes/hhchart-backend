@@ -44,4 +44,5 @@ describe('Given Data Construction', () => {
     });
 });
 
-// TODO: more extensive testing to make sure that tree is being constructed correctly
+module.exports.verifyTree = verifyTree;
+

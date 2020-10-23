@@ -25,7 +25,7 @@ const EmployeeSchema = mongoose.Schema({
     employeeId: Number,
     managerId: {
         type: Number,
-        required: true 
+        required: true
     },
     email: {
         type: String,
@@ -36,12 +36,12 @@ const EmployeeSchema = mongoose.Schema({
         default: helpers.formatDate(new Date()),
     },
     img: {
-      buffer: Buffer,
-      contentType: String
+        buffer: Buffer,
+        contentType: String
     },
     teamId: String
 });
 
-module.exports = function(collectionName) {
-    return mongoose.model('Employee', EmployeeSchema, collectionName); ;
+module.exports = (collectionName) => {
+    return mongoose.model('Employee', EmployeeSchema, collectionName);;
 };
