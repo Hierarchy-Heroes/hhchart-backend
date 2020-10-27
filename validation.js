@@ -17,7 +17,7 @@ const validEmployeeSchema = Joi.object({
         .required(),
 
     password: Joi.string()
-        .min(8)
+        .min(4)
         .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
         .required(),
 
@@ -49,7 +49,7 @@ const validLoginCredentials = Joi.object({
         .required(),
 
     password: Joi.string()
-        .min(8)
+        .min(4)
         .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
         .required(),
 });
@@ -78,10 +78,10 @@ const validateLogin = (value) => {
  */
 const emailInUse = async (emailValue, collectionName, res) => {
     try {
-        const user = await findEmployee({email: emailValue}, collectionName);
+        const user = await findEmployee({ email: emailValue }, collectionName, res);
         return user;
     } catch (err) {
-        res.send(err);
+        return res.status(400).send(err.message);
     }
 };
 
@@ -90,10 +90,10 @@ const emailInUse = async (emailValue, collectionName, res) => {
  * @param {*} userPassword password associated with the currently selected user, stored in db
  * @param {*} value password included in HTTP payload
  */
-const matchPassword = async (value, userPassword) => {
+const matchPassword = async (value, userPassword, res) => {
     bcrypt.compare(value, userPassword, (err, result) => {
         if (err) {
-            console.log(err);
+            res.status(400).send(err.message);
         }
         return result;
     })

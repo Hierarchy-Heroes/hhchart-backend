@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { validateLogin, emailInUse, matchPassword } = require('../validation');
+const { trimSpaces } = require('../misc/helper');
 
 router.post('/login', async (req, res) => {
     const { error } = validateLogin(req.body);
@@ -10,21 +11,25 @@ router.post('/login', async (req, res) => {
         res.status(400).send(error.details[0].message);
     }
 
-    const user = await emailInUse(req.body.email, req.body.companyName.replace(/\s/g, ''), res);
+    const user = await emailInUse(req.body.email, trimSpaces(req.body.companyName), res);
     if (!user) {
-        res.status(401).send('user not found');
+        return res.status(401).send('user not found');
     }
 
-    const passwordMatch = matchPassword(req.body.password, user.password); 
+    const passwordMatch = matchPassword(req.body.password, user.password);
 
     if (!passwordMatch) {
-        res.status(401).send('invalid password'); 
+        res.status(401).send('invalid password');
     }
 
+    let userSignature = {
+        _id: user._id, 
+        _company: user.companyName  
+    };
+
     // create and assign token to current user 
-    const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: "2h"});
-    console.log(token);
-    res.header('auth-token', token).send(token); 
+    const token = jwt.sign(userSignature, process.env.JWT_SECRET, { expiresIn: "2h" });
+    res.header('auth-token', token).send(token);
 });
 
 router.post('/register', async (req, res) => {
