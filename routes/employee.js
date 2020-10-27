@@ -7,7 +7,7 @@ const fs = require("fs")
 const { verifyToken, verifyManager } = require('../verification');
 const { validateEmployee, emailInUse } = require('../validation');
 const { createTree, sanitizeJSON } = require('../treeConstruction');
-const { findEmployee } = require('../interface/IEmployee');
+const { findEmployee, createEmployee } = require('../interface/IEmployee');
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
@@ -84,10 +84,11 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
         return res.status(400).send("Missing company name.");
     }
 
-    //passes in collection name (in this case, the company)
-    const Employee = require('../models/Employee')(req.body.company.replace(/\s/g, ''));
-    const EmployeeTree = require('../models/Employee')(req.body.company.replace(/\s/g, '')+"Tree");
     const company = req.body.company.replace(/\s/g, '');
+
+    //passes in collection name (in this case, the company)
+    const Employee = require('../models/Employee')(company);
+    const EmployeeTree = require('../models/Employee')(company+"Tree");
 
     fs.readFile(req.file.path, async function (err, data) {
         const employees = JSON.parse(data);
@@ -218,27 +219,5 @@ router.post('/:companyName/upload-image', upload.single("employeeImg"), async (r
   fs.unlinkSync(req.file.path);
 
 });
-
-/**
-* Creates a new Employee schema object with the passed in employee data.
-* @param {Schema} Employee
-* @param {Object} employeeData
-*/
-const createEmployee = (Employee, employeeData) => {
-    const employeeObj = new Employee({
-        firstName: employeeData.firstName,
-        lastName: employeeData.lastName,
-        companyId: employeeData.companyId,
-        password: employeeData.password,
-        positionTitle: employeeData.positionTitle,
-        companyName: employeeData.companyName,
-        isManager: employeeData.isManager,
-        employeeId: employeeData.employeeId,
-        managerId: employeeData.managerId,
-        email: employeeData.email,
-        startDate: employeeData.startDate,
-    });
-    return employeeObj;
-}
 
 module.exports = router;
