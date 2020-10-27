@@ -1,3 +1,4 @@
+const { createEmployee } = require('./interface/IEmployee');
 
 const sanitizeJSON = (clusterData) => {
     cleanData = []; 
@@ -7,6 +8,13 @@ const sanitizeJSON = (clusterData) => {
     return cleanData;
 }
 
+/**
+* Generate's a tree structure of employees.
+* @param {[Object]} employees
+* @param {Schema} Employee
+* @return {[[Schema], Object]} -- an tree structure containing Employee schema objects,
+*                                 a hash table mapping employee ids to Employee schema object
+*/
 const createTree = (employees, Employee) => {
     let hashTable = Object.create(null);
     employees.forEach((employeeData) => {
@@ -24,31 +32,9 @@ const createTree = (employees, Employee) => {
             employeeTree.push(hashTable[employeeData.employeeId]);
         }
     });
-    return employeeTree;
+    return [employeeTree, hashTable];
 }
 
-/**
-* TODO: Place this in helper.js?
-* Creates a new Employee schema object with the passed in employee data.
-* @param {Schema} Employee
-* @param {Object} employeeData
-*/
-const createEmployee = (Employee, employeeData) => {
-    const employeeObj = new Employee({
-        firstName: employeeData.firstName,
-        lastName: employeeData.lastName,
-        companyId: employeeData.companyId,
-        password: employeeData.password,
-        positionTitle: employeeData.positionTitle,
-        companyName: employeeData.companyName,
-        isManager: employeeData.isManager,
-        employeeId: employeeData.employeeId,
-        managerId: employeeData.managerId,
-        email: employeeData.email,
-        startDate: employeeData.startDate,
-    });
-    return employeeObj;
-}
 
 module.exports.createTree = createTree;
 module.exports.sanitizeJSON = sanitizeJSON;

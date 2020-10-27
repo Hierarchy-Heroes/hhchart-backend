@@ -7,7 +7,7 @@ const fs = require("fs")
 const { verifyToken, verifyManager } = require('../verification');
 const { validateEmployee, emailInUse } = require('../validation');
 const { createTree, sanitizeJSON } = require('../treeConstruction');
-const { findEmployee, updateEmployee, removeEmployee } = require('../interface/IEmployee');
+const { findEmployee, updateEmployee, removeEmployee, createEmployee } = require('../interface/IEmployee');
 const { trimSpaces } = require('../misc/helper');
 
 //Multer storage
@@ -151,10 +151,11 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
         return res.status(400).send("Missing company name.");
     }
 
-    //passes in collection name (in this case, the company)
-    const Employee = require('../models/Employee')(req.body.company.replace(/\s/g, ''));
-    const EmployeeTree = require('../models/Employee')(req.body.company.replace(/\s/g, '')+"Tree");
     const company = req.body.company.replace(/\s/g, '');
+
+    //passes in collection name (in this case, the company)
+    const Employee = require('../models/Employee')(company);
+    const EmployeeTree = require('../models/Employee')(company+"Tree");
 
     fs.readFile(req.file.path, async function (err, data) {
         const employees = JSON.parse(data);
@@ -162,49 +163,54 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
 
-        const tree = createTree(employees, EmployeeTree)[0];
-
-        tree.managerId = Number(-1);
+        const [tree, idMap] = createTree(employees, EmployeeTree);
 
         //store the tree
-        try {
-            const savedEmployee = await tree.save();
-        } catch (err) {
-            return res.status(500).send(err.message);
+        for(i in tree) {
+          tree[i].managerId = Number(-1);
+          try {
+              const savedEmployee = await tree[i].save();
+          } catch (err) {
+              return res.status(500).send(err.message);
+          }
         }
 
         //store individual employees
         for (i in employees) {
-            let employee = employees[i];
-            if (employee.managerId == undefined) {
-                employee.managerId = Number(-1);
-            }
+          let employee = employees[i];
+          if (employee.managerId == undefined) {
+            employee.managerId = Number(-1);
+          }
 
-            const { error } = validateEmployee(employee);
+          const { error } = validateEmployee(employee);
 
-            if (error) {
-                return res.status(400).send(error.details[0].message);
-            }
+          if (error) {
+              return res.status(400).send(error.details[0].message);
+          }
 
-            const credentialsExist = await emailInUse(employee.email, company, res);
+          const credentialsExists = await emailInUse(employee.email, company, res);
 
-            if (credentialsExist) {
-                return res.status(400).send("User: " + employee.email + " already exists.");
-            }
+          if (credentialsExists) {
+              return res.status(400).send("User: " + employee.email + " already exists.");
+          }
 
-            bcrypt.hash(employee.password, 10, async (err, hash) => {
-                if (err) {
-                    return res.send("Password encryption failed.");
-                }
-                employee.password = hash;
+          bcrypt.hash(employee.password, 10, async (err, hash) => {
+              if (err) {
+                  return res.send("Password encryption failed.");
+              }
+              employee.password = hash;
 
-                const employeeObj = createEmployee(Employee, employee);
-                try {
-                    const savedEmployee = await employeeObj.save();
-                } catch (err) {
-                    return res.status(500).send(err.message);
-                }
-            });
+              const employeeObj = createEmployee(Employee, employee);
+
+              //to make sure flat and tree collections have the same id
+              employeeObj._id = idMap[employee.employeeId]._id;
+
+              try {
+                  const savedEmployee = await employeeObj.save();
+              } catch (err) {
+                  return res.status(500).send(err.message);
+              }
+          });
         }
         return res.status(200).send("Employee data uploaded successfully");
     });
@@ -245,27 +251,5 @@ router.post('/:companyName/upload-image', upload.single("employeeImg"), verifyTo
         fs.unlinkSync(req.file.path);
 
     });
-
-/**
-* Creates a new Employee schema object with the passed in employee data.
-* @param {Schema} Employee
-* @param {Object} employeeData
-*/
-const createEmployee = (Employee, employeeData) => {
-    const employeeObj = new Employee({
-        firstName: employeeData.firstName,
-        lastName: employeeData.lastName,
-        companyId: employeeData.companyId,
-        password: employeeData.password,
-        positionTitle: employeeData.positionTitle,
-        companyName: employeeData.companyName,
-        isManager: employeeData.isManager,
-        employeeId: employeeData.employeeId,
-        managerId: employeeData.managerId,
-        email: employeeData.email,
-        startDate: employeeData.startDate,
-    });
-    return employeeObj;
-}
 
 module.exports = router;
