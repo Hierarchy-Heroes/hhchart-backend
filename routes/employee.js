@@ -101,12 +101,13 @@ router.post('/:companyName/update', verifyToken, verifyManager, async (req, res)
     if (typeof (req.body.update) !== "object") {
         return res.status(400).send('Update data is missing or has incorrect format');
     }
-    const employeeToUpdate = findEmployee({ _id: employeeId },
+    const employeeToUpdate = await findEmployee({ _id: employeeId },
         trimSpaces(req.params.companyName), res);
     if (!employeeToUpdate) {
         return res.status(400).send('employee does not exist');
     }
     updateEmployee(employeeToUpdate._id, req.body.update, trimSpaces(req.params.companyName), res);
+    return res.status(200).send("successfully updated employee with id: " + employeeToRemove._id);
 });
 
 router.post('/:companyName/remove', verifyToken, verifyManager, async (req, res) => {
@@ -114,12 +115,13 @@ router.post('/:companyName/remove', verifyToken, verifyManager, async (req, res)
     if (employeeId === undefined) {
         return res.status(400).send('Missing employee id');
     }
-    const employeeToRemove = findEmployee({ _id: employeeId },
+    const employeeToRemove = await findEmployee({ _id: employeeId },
         trimSpaces(req.params.companyName), res);
     if (!employeeToRemove) {
         return res.status(400).send('employee does not exist');
     }
     removeEmployee(employeeToRemove._id, trimSpaces(req.params.companyName), res);
+    return res.status(200).send("successfully removed employee with id: " + employeeToRemove._id);
 });
 
 /** 

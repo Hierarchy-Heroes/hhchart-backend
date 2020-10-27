@@ -19,7 +19,6 @@ const removeEmployee = async (id, collectionName, res) => {
         if (err) {
             return res.status(400).send("Removing employee error: " + err.message);
         }
-        console.log("Successfully removed employee with id: " + id);
     });
 }
 
@@ -29,7 +28,6 @@ const updateEmployee = async (id, update, collectionName, res) => {
         if (err) {
             return res.status(400).send("Updating employee error: " + err.message);
         }
-        console.log("Successfully updated employee with id: " + id);
     });
 }
 
