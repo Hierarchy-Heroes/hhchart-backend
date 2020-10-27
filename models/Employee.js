@@ -39,7 +39,8 @@ const EmployeeSchema = mongoose.Schema({
         buffer: Buffer,
         contentType: String
     },
-    teamId: String
+    teamId: String,
+    children: [this]
 });
 
 module.exports = (collectionName) => {

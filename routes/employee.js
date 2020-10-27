@@ -26,9 +26,9 @@ const upload = multer({ storage: storage });
 
 router.get('/:companyName/tree', verifyToken, async (req, res) => {
     try {
-        const Employee = require('../models/Employee')(trimSpaces(req.params.companyName));
+        const Employee = require('../models/Employee')(req.params.companyName+"Tree");
         const employees = await Employee.find();
-        res.json(createTree(sanitizeJSON(employees)));
+        res.json(employees);
     } catch (err) {
         res.json({
             message: err.message
@@ -124,11 +124,12 @@ router.post('/:companyName/remove', verifyToken, verifyManager, async (req, res)
     return res.status(200).send("successfully removed employee with id: " + employeeToRemove._id);
 });
 
-/** 
- * search the organization by teams, employees, and other 
- * NOTE: query has to be a javascript object  
+
+/**
+ * search the organization by teams, employees, and other
+ * NOTE: query has to be a javascript object
  */
-router.get('/:companyName/:query', verifyToken, async (req, res) => {
+router.get('/:companyName/:query', async (req, res) => {
     try {
         const employee = await findEmployee(req.params.query, trimSpaces(req.params.companyName), res);
         res.json(employee);
@@ -145,25 +146,34 @@ must be "employeeJSON". A "company" field is also required with the name of the 
 
 router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager, async (req, res) => {
     //if the company name is missing
-    if (req.body.company === undefined) {
+    if (req.body.company == undefined) {
         fs.unlinkSync(req.file.path);
         return res.status(400).send("Missing company name.");
     }
 
     //passes in collection name (in this case, the company)
-    const Employee = require('../models/Employee')(trimSpaces(req.body.company));
-    const company = trimSpaces(req.body.company);
+    const Employee = require('../models/Employee')(req.body.company.replace(/\s/g, ''));
+    const EmployeeTree = require('../models/Employee')(req.body.company.replace(/\s/g, '')+"Tree");
+    const company = req.body.company.replace(/\s/g, '');
 
-    fs.readFile(req.file.path, async (err, data) => {
-        if (err) {
-            return res.status(400).send('Importing JSON error: ' + err.message);
-        }
-
+    fs.readFile(req.file.path, async function (err, data) {
         const employees = JSON.parse(data);
 
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
 
+        const tree = createTree(employees, EmployeeTree)[0];
+
+        tree.managerId = Number(-1);
+
+        //store the tree
+        try {
+            const savedEmployee = await tree.save();
+        } catch (err) {
+            return res.status(500).send(err.message);
+        }
+
+        //store individual employees
         for (i in employees) {
             let employee = employees[i];
             if (employee.managerId == undefined) {
@@ -198,7 +208,6 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
         }
         return res.status(200).send("Employee data uploaded successfully");
     });
-
 });
 
 /**
