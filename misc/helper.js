@@ -9,4 +9,9 @@ const formatDate = (date) => {
     return yy + '-' + mm + '-' + dd;
 }
 
+const trimSpaces = (str) => {
+    return str.replace(/\s/g, ''); 
+}
+
 module.exports.formatDate = formatDate; 
+module.exports.trimSpaces = trimSpaces; 
