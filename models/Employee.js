@@ -25,7 +25,7 @@ const EmployeeSchema = mongoose.Schema({
     employeeId: Number,
     managerId: {
         type: Number,
-        required: true 
+        required: true
     },
     email: {
         type: String,
@@ -39,7 +39,8 @@ const EmployeeSchema = mongoose.Schema({
       buffer: Buffer,
       contentType: String
     },
-    teamId: String
+    teamId: String,
+    children: [this]
 });
 
 module.exports = function(collectionName) {

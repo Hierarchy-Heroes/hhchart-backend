@@ -26,9 +26,9 @@ const upload = multer({ storage: storage });
 // bug: verifyManager is undefined (because we are not sending the ID, how can you backtrack to who the user is with just the token...)
 router.get('/:companyName/tree', verifyToken, async (req, res) => {
     try {
-        const Employee = require('../models/Employee')(req.params.companyName);
+        const Employee = require('../models/Employee')(req.params.companyName+"Tree");
         const employees = await Employee.find();
-        res.json(createTree(sanitizeJSON(employees)));
+        res.json(employees);
     } catch (err) {
         res.json({
             message: err.message
@@ -56,10 +56,10 @@ router.get('/:companyName/flat', verifyToken, async (req, res) => {
 });
 
 
-/** 
- * search the organization by teams, employees, and other 
- * NOTE: query has to be a javascript object  
- */ 
+/**
+ * search the organization by teams, employees, and other
+ * NOTE: query has to be a javascript object
+ */
 router.get('/:companyName/:query', async (req, res) => {
     try {
         const employee = await findEmployee(req.params.query, req.params.companyName);
@@ -86,6 +86,7 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
 
     //passes in collection name (in this case, the company)
     const Employee = require('../models/Employee')(req.body.company.replace(/\s/g, ''));
+    const EmployeeTree = require('../models/Employee')(req.body.company.replace(/\s/g, '')+"Tree");
     const company = req.body.company.replace(/\s/g, '');
 
     fs.readFile(req.file.path, async function (err, data) {
@@ -94,6 +95,18 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
 
+        const tree = createTree(employees, EmployeeTree)[0];
+
+        tree.managerId = Number(-1);
+
+        //store the tree
+        try {
+            const savedEmployee = await tree.save();
+        } catch (err) {
+            return res.status(500).send(err.message);
+        }
+
+        //store individual employees
         for (i in employees) {
           let employee = employees[i];
           if (employee.managerId == undefined) {
