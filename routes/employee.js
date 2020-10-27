@@ -96,15 +96,16 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
 
-        const tree = createTree(employees, EmployeeTree)[0];
-
-        tree.managerId = Number(-1);
+        const [tree, idMap] = createTree(employees, EmployeeTree);
 
         //store the tree
-        try {
-            const savedEmployee = await tree.save();
-        } catch (err) {
-            return res.status(500).send(err.message);
+        for(i in tree) {
+          tree[i].managerId = Number(-1);
+          try {
+              const savedEmployee = await tree[i].save();
+          } catch (err) {
+              return res.status(500).send(err.message);
+          }
         }
 
         //store individual employees
@@ -133,6 +134,10 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
               employee.password = hash;
 
               const employeeObj = createEmployee(Employee, employee);
+
+              //to make sure flat and tree collections have the same id
+              employeeObj._id = idMap[employee.employeeId]._id;
+
               try {
                   const savedEmployee = await employeeObj.save();
               } catch (err) {
