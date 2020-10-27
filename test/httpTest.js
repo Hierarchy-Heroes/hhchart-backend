@@ -22,8 +22,10 @@ const nonManagerCredentials = {
     "password": "lunaga"
 };
 
-describe('Manager: authentication and tree generation sequence working as intended', function () {
-    let token;
+let tokenManager, tokenNonManager; 
+
+describe('Manager: authentication and tree generation sequence working as intended', () => {
+    
     it('responds with JWT token', (done) => {
         request(app)
             .post('/auth/login')
@@ -32,17 +34,18 @@ describe('Manager: authentication and tree generation sequence working as intend
             .expect((res) => {
                 if (!('auth-token' in res.headers)) throw new Error('Missing auth token header');
                 if (typeof (res.headers["auth-token"]) !== "string") throw new Error('Token format is incorrect');
-                token = res.headers["auth-token"];
+                tokenManager = res.headers["auth-token"];
             })
             .expect(200, done);
     });
     it('authenticated user can access tree data', (done) => {
+        console.log(tokenManager);
         request(app)
             .get('/employees/CycloneAviation/tree')
-            .set({ 'auth-token': token, Accept: 'application/json' })
+            .set({ 'auth-token': tokenManager, Accept: 'application/json' })
             .expect((res) => {
                 if (!(typeof (res.body) == "object")) throw new Error('Tree request returns data with incorrect format');
-                if (!(res.body.length !== 1)) throw new Error('Data is incomplete or incorrectly formated');
+                if ((res.body.length !== 1)) throw new Error('Data is incomplete or incorrectly formated');
                 if (!(verifyTree(res.body[0]))) throw new Error('Tree is poorly constructed');
             })
             .expect(200, done);
@@ -50,23 +53,16 @@ describe('Manager: authentication and tree generation sequence working as intend
     it('authenticated user can access flat data', (done) => {
         request(app)
             .get('/employees/CycloneAviation/flat')
-            .set({ 'auth-token': token, Accept: 'application/json' })
+            .set({ 'auth-token': tokenManager, Accept: 'application/json' })
             .expect((res) => {
                 if (!(typeof (res.body) == "object")) throw new Error('Flat list request returns data with incorrect format');
                 if (!(res.body.length > 0)) throw new Error('Data is incomplete or incorrectly formated');
             })
             .expect(200, done);
     });
-    // it('manager is authorized user and can perform administrative operations', function(done) {
-    //     request(app)
-    //         .post()
-
-
-    // });
 });
 
-describe('Non-manager: authentication and tree generation sequence working as intended', (done) => {
-    let token_nm;
+describe('Non-manager: authentication and tree generation sequence working as intended', () => {
     it('responds with JWT token', (done) => {
         request(app)
             .post('/auth/login')
@@ -75,17 +71,17 @@ describe('Non-manager: authentication and tree generation sequence working as in
             .expect((res) => {
                 if (!('auth-token' in res.headers)) throw new Error('Missing auth token header');
                 if (typeof (res.headers["auth-token"]) !== "string") throw new Error('Token format is incorrect');
-                token_nm = res.headers["auth-token"];
+                tokenNonManager = res.headers["auth-token"];
             })
             .expect(200, done);
     });
     it('authenticated user can access tree data', (done) => {
         request(app)
             .get('/employees/CycloneAviation/tree')
-            .set({ 'auth-token': token_nm, Accept: 'application/json' })
+            .set({ 'auth-token': tokenNonManager, Accept: 'application/json' })
             .expect((res) => {
                 if (!(typeof (res.body) == "object")) throw new Error('Tree request returns data with incorrect format');
-                if (!(res.body.length !== 1)) throw new Error('Data is incomplete or incorrectly formated');
+                if ((res.body.length !== 1)) throw new Error('Data is incomplete or incorrectly formated');
                 if (!(verifyTree(res.body[0]))) throw new Error('Tree is poorly constructed');
             })
             .expect(200, done);
@@ -93,7 +89,7 @@ describe('Non-manager: authentication and tree generation sequence working as in
     it('authenticated user can access flat data', (done) => {
         request(app)
             .get('/employees/CycloneAviation/flat')
-            .set({ 'auth-token': token_nm, Accept: 'application/json' })
+            .set({ 'auth-token': tokenNonManager, Accept: 'application/json' })
             .expect((res) => {
                 if (!(typeof (res.body) == "object")) throw new Error('Flat list request returns data with incorrect format');
                 if (!(res.body.length > 0)) throw new Error('Data is incomplete or incorrectly formated');

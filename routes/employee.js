@@ -8,6 +8,7 @@ const { verifyToken, verifyManager } = require('../verification');
 const { validateEmployee, emailInUse } = require('../validation');
 const { createTree, sanitizeJSON } = require('../treeConstruction');
 const { findEmployee, updateEmployee, removeEmployee } = require('../interface/IEmployee');
+const { trimSpaces } = require('../misc/helper');
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
@@ -25,7 +26,7 @@ const upload = multer({ storage: storage });
 
 router.get('/:companyName/tree', verifyToken, async (req, res) => {
     try {
-        const Employee = require('../models/Employee')(req.params.companyName);
+        const Employee = require('../models/Employee')(trimSpaces(req.params.companyName));
         const employees = await Employee.find();
         res.json(createTree(sanitizeJSON(employees)));
     } catch (err) {
@@ -44,7 +45,7 @@ router.get('/:companyName/flat', verifyToken, async (req, res) => {
     try {
         //passes in collection name (in this case, the company)
         //TODO: modify collection name to get the company from the currently logged in user
-        const Employee = require('../models/Employee')(req.params.companyName);
+        const Employee = require('../models/Employee')(trimSpaces(req.params.companyName));
         const employees = await Employee.find();
         res.json(employees);
     } catch (err) {
@@ -54,34 +55,84 @@ router.get('/:companyName/flat', verifyToken, async (req, res) => {
     }
 });
 
+/* create a new employee */
+router.post('/:companyName/add', verifyToken, verifyManager, async (req, res) => {
+    //if manager id is missing, set to -1
+    if (req.body.managerId == undefined) {
+        req.body.managerId = Number(-1);
+    }
+
+    const { error } = validateEmployee(req.body);
+
+    if (error) {
+        return res.status(400).send(error.details[0].message);
+    }
+
+    const credentialsExists = await emailInUse(req.body.email, trimSpaces(req.user._company), res);
+
+    if (credentialsExists) {
+        return res.status(400).send("User: " + req.body.email + " already exists.");
+    }
+
+    // encrypt password
+    bcrypt.hash(req.body.password, 10, async (err, hash) => {
+        if (err) {
+            return res.send("Password encryption failed.");
+        }
+        req.body.password = hash;
+
+        const Employee = require('../models/Employee')(trimSpaces(req.user._company));
+        const newEmployee = createEmployee(Employee, req.body);
+
+        try {
+            const savedEmployee = await newEmployee.save();
+            return res.status(200).send("Employee data uploaded successfully.");
+        } catch (err) {
+            return res.status(500).send(err.message);
+        }
+    });
+});
+
+router.post('/:companyName/update', verifyToken, verifyManager, async (req, res) => {
+    const employeeId = req.body._id;
+    if (employeeId === undefined) {
+        return res.status(400).send('Missing employee id');
+    }
+    if (typeof (req.body.update) !== "object") {
+        return res.status(400).send('Update data is missing or has incorrect format');
+    }
+    const employeeToUpdate = findEmployee({ _id: employeeId },
+        trimSpaces(req.params.companyName), res);
+    if (!employeeToUpdate) {
+        return res.status(400).send('employee does not exist');
+    }
+    updateEmployee(employeeToUpdate._id, req.body.update, trimSpaces(req.params.companyName), res);
+});
+
+router.post('/:companyName/remove', verifyToken, verifyManager, async (req, res) => {
+    const employeeId = req.body._id;
+    if (employeeId === undefined) {
+        return res.status(400).send('Missing employee id');
+    }
+    const employeeToRemove = findEmployee({ _id: employeeId },
+        trimSpaces(req.params.companyName), res);
+    if (!employeeToRemove) {
+        return res.status(400).send('employee does not exist');
+    }
+    removeEmployee(employeeToRemove._id, trimSpaces(req.params.companyName), res);
+});
 
 /** 
  * search the organization by teams, employees, and other 
  * NOTE: query has to be a javascript object  
  */
-router.get('/:companyName/:query', async (req, res) => {
+router.get('/:companyName/:query', verifyToken, async (req, res) => {
     try {
-        const employee = await findEmployee(req.params.query, req.params.companyName, res);
+        const employee = await findEmployee(req.params.query, trimSpaces(req.params.companyName), res);
         res.json(employee);
     } catch (err) {
-        res.json({
-            message: err
-        });
+        res.status(400).send('query error');
     }
-});
-
-router.post('/:companyName/remove', async (req, res) => {
-    // const employeeId = req._id; 
-    // if (req._id === undefined) {
-    //     return res.status(400).send('Missing employee id'); 
-    // }
-    // if (!findEmployee({_id : employeeId})) {
-    //     return res.status(400).send('employee does not exist'); 
-    // }
-});
-
-router.post('/:companyName/update', async (req, res) => {
-
 });
 
 /**
@@ -90,18 +141,22 @@ The data POSTed must be of type multipart/form-data and the form field name for 
 must be "employeeJSON". A "company" field is also required with the name of the company the data belongs to.
 */
 
-router.post('/import', upload.single("employeeJSON"), async (req, res) => {
+router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager, async (req, res) => {
     //if the company name is missing
-    if (req.body.company == undefined) {
+    if (req.body.company === undefined) {
         fs.unlinkSync(req.file.path);
         return res.status(400).send("Missing company name.");
     }
 
     //passes in collection name (in this case, the company)
-    const Employee = require('../models/Employee')(req.body.company.replace(/\s/g, ''));
-    const company = req.body.company.replace(/\s/g, '');
+    const Employee = require('../models/Employee')(trimSpaces(req.body.company));
+    const company = trimSpaces(req.body.company);
 
     fs.readFile(req.file.path, async (err, data) => {
+        if (err) {
+            return res.status(400).send('Importing JSON error: ' + err.message);
+        }
+
         const employees = JSON.parse(data);
 
         //delete uploaded file after importing data
@@ -144,78 +199,41 @@ router.post('/import', upload.single("employeeJSON"), async (req, res) => {
 
 });
 
-/* create a new employee */
-router.post('/add', async (req, res) => {
-    //if manager id is missing, set to -1
-    if (req.body.managerId == undefined) {
-        req.body.managerId = Number(-1);
-    }
-
-    const { error } = validateEmployee(req.body);
-
-    if (error) {
-        return res.status(400).send(error.details[0].message);
-    }
-
-    const credentialsExists = await emailInUse(req.body.email, req.body.companyName.replace(/\s/g, ''), res);
-
-    if (credentialsExists) {
-        return res.status(400).send("User: " + req.body.email + " already exists.");
-    }
-
-    // encrypt password
-    bcrypt.hash(req.body.password, 10, async (err, hash) => {
-        if (err) {
-            return res.send("Password encryption failed.");
-        }
-        req.body.password = hash;
-
-        const Employee = require('../models/Employee')(req.body.companyName.replace(/\s/g, ''));
-        const newEmployee = createEmployee(Employee, req.body);
-
-        try {
-            const savedEmployee = await newEmployee.save();
-            return res.status(200).send("Employee data uploaded successfully.");
-        } catch (err) {
-            return res.status(500).send(err.message);
-        }
-    });
-});
-
 /**
 * Upload an employee image and store it in their document.
 * Required body parameters: employeeId
 */
-router.post('/:companyName/upload-image', upload.single("employeeImg"), async (req, res) => {
-    //if the company name is missing
-    if (req.body.employeeId == undefined) {
+router.post('/:companyName/upload-image', upload.single("employeeImg"), verifyToken,
+    verifyManager, async (req, res) => {
+        //if the company name is missing
+        if (req.body.employeeId == undefined) {
+            fs.unlinkSync(req.file.path);
+            return res.status(400).send("Missing employee ID.");
+        }
+
+        const img = {
+            data: fs.readFileSync(req.file.path),
+            contentType: req.file.mimetype
+        };
+
+        const employee = await findEmployee({ employeeId: req.body.employeeId }, trimSpaces(req.params.companyName), res);
+
+        if (!employee) {
+            return res.status(400).send("employee with id: " + req.body.employeeId + " does not exist.");
+        }
+
+        employee.img = img;
+
+        try {
+            await employee.save();
+            res.status(200).send("Employee image uploaded successfully.");
+        } catch (err) {
+            res.status(500).send(err.message);
+        }
+
         fs.unlinkSync(req.file.path);
-        return res.status(400).send("Missing employee ID.");
-    }
 
-    const img = {
-        data: fs.readFileSync(req.file.path),
-        contentType: req.file.mimetype
-    };
-
-    const employee = await findEmployee({ employeeId: req.body.employeeId }, req.params.companyName, res);
-
-    if (!employee) {
-        return res.status(400).send("employee with id: " + req.body.employeeId + " does not exist.");
-    }
-
-    employee.img = img;
-
-    try {
-        await employee.save();
-        res.status(200).send("Employee image uploaded successfully.");
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
-
-    fs.unlinkSync(req.file.path);
-
-});
+    });
 
 /**
 * Creates a new Employee schema object with the passed in employee data.
