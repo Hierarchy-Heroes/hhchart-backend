@@ -8,6 +8,13 @@ const sanitizeJSON = (clusterData) => {
     return cleanData;
 }
 
+/**
+* Generate's a tree structure of employees.
+* @param {[Object]} employees
+* @param {Schema} Employee
+* @return {[[Schema], Object]} -- an tree structure containing Employee schema objects,
+*                                 a hash table mapping employee ids to Employee schema object
+*/
 const createTree = (employees, Employee) => {
     let hashTable = Object.create(null);
     employees.forEach((employeeData) => {
@@ -25,7 +32,7 @@ const createTree = (employees, Employee) => {
             employeeTree.push(hashTable[employeeData.employeeId]);
         }
     });
-    return employeeTree;
+    return [employeeTree, hashTable];
 }
 
 

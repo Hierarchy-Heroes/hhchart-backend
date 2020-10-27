@@ -14,6 +14,7 @@ const findEmployee = async (query, collectionName) => {
 * Creates a new Employee schema object with the passed in employee data.
 * @param {Schema} Employee
 * @param {Object} employeeData
+* @return {Schema}
 */
 const createEmployee = (Employee, employeeData) => {
     const employeeObj = new Employee({
