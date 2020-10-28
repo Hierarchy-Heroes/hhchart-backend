@@ -22,11 +22,18 @@ You will only be able to connect to the cluster from the IP addresses added to t
 `X = localhost:port`
 `{} = http body`
 
+Note: all endpoints require authentication header
+
 ### GET
 - Get employee tree: `X/employees/{company name}/tree`
    - Returns a JSON object containing a tree structure of the entire dataset
 - Get all employees: `X/employees/{company name}/flat`
    - Returns all of the employees in the company
+- Backend query: `X/employees/{company name}/query`
+   - searches the db for employees matching the given query 
+   - body: {query: {...}}
+- Get currently authenticated user: `X/employees/{company name}/usr`
+   - returns document of user corresponding to the passed auth token
 
 ### POST
 - Import employees: `X/employees/import`
@@ -34,7 +41,9 @@ You will only be able to connect to the cluster from the IP addresses added to t
    - Data posted must be of type `multipart/form-data` with two fields:
        - `employeeJSON` = employee JSON file user uploads
        - `company` = name of company data belongs to
-
+- Import image: `X/employees/{company name}/upload-image`
+   - body: {_id: employee id }
+   - request should contain a file to upload 
 
 - Create new employee: `X/employees/{company name}/add`
    - Required body fields: `firstName`, `lastName`, `password`, `companyName`, `isManager`, `employeeId`, `managerId`, `email`

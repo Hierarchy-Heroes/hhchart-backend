@@ -39,7 +39,6 @@ describe('Manager: authentication and tree generation sequence working as intend
             .expect(200, done);
     });
     it('authenticated user can access tree data', (done) => {
-        console.log(tokenManager);
         request(app)
             .get('/employees/CycloneAviation/tree')
             .set({ 'auth-token': tokenManager, Accept: 'application/json' })

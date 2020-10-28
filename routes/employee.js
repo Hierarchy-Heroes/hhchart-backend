@@ -4,6 +4,7 @@ const router = express.Router();
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const fs = require("fs")
+const jwt = require('jsonwebtoken');
 const { verifyToken, verifyManager } = require('../verification');
 const { validateEmployee, emailInUse } = require('../validation');
 const { createTree, sanitizeJSON } = require('../treeConstruction');
@@ -26,9 +27,10 @@ const upload = multer({ storage: storage });
 
 router.get('/:companyName/tree', verifyToken, async (req, res) => {
     try {
-        const Employee = require('../models/Employee')(req.params.companyName+"Tree");
+        const Employee = require('../models/Employee')(req.params.companyName);
         const employees = await Employee.find();
-        res.json(employees);
+        const treeData = createTree(sanitizeJSON(employees), Employee); 
+        res.json(treeData[0]);
     } catch (err) {
         res.json({
             message: err.message
@@ -129,12 +131,29 @@ router.post('/:companyName/remove', verifyToken, verifyManager, async (req, res)
  * search the organization by teams, employees, and other
  * NOTE: query has to be a javascript object
  */
-router.get('/:companyName/:query', async (req, res) => {
+router.get('/:companyName/query', async (req, res) => {
     try {
-        const employee = await findEmployee(req.params.query, trimSpaces(req.params.companyName), res);
+        const employee = await findEmployee(req.body.query, trimSpaces(req.params.companyName), res);
         res.json(employee);
     } catch (err) {
         res.status(400).send('query error');
+    }
+});
+
+/**
+ * retrieve the document of the current authenticated user
+ */
+router.get('/:companyName/usr', async (req, res) => {
+    const token = req.header('auth-token');
+    if (!token) {
+        return res.status(401).send('Access Denied');
+    }
+    try {
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        const authenticatedUser = await findEmployee({"_id": verified._id}, req.params.companyName, res); 
+        res.status(200).send(authenticatedUser)
+    } catch (err) {
+        res.status(400).send('error retrieving currently authenticated user: ' + err.message); 
     }
 });
 
@@ -155,25 +174,12 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
 
     //passes in collection name (in this case, the company)
     const Employee = require('../models/Employee')(company);
-    const EmployeeTree = require('../models/Employee')(company+"Tree");
 
     fs.readFile(req.file.path, async function (err, data) {
         const employees = JSON.parse(data);
 
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
-
-        const [tree, idMap] = createTree(employees, EmployeeTree);
-
-        //store the tree
-        for(i in tree) {
-          tree[i].managerId = Number(-1);
-          try {
-              const savedEmployee = await tree[i].save();
-          } catch (err) {
-              return res.status(500).send(err.message);
-          }
-        }
 
         //store individual employees
         for (i in employees) {
@@ -218,7 +224,7 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
 
 /**
 * Upload an employee image and store it in their document.
-* Required body parameters: employeeId
+* Required body parameters: _id of the employee's document 
 */
 router.post('/:companyName/upload-image', upload.single("employeeImg"), verifyToken,
     verifyManager, async (req, res) => {
@@ -233,7 +239,7 @@ router.post('/:companyName/upload-image', upload.single("employeeImg"), verifyTo
             contentType: req.file.mimetype
         };
 
-        const employee = await findEmployee({ employeeId: req.body.employeeId }, trimSpaces(req.params.companyName), res);
+        const employee = await findEmployee({ "_id": req.body.employeeId }, trimSpaces(req.params.companyName), res);
 
         if (!employee) {
             return res.status(400).send("employee with id: " + req.body.employeeId + " does not exist.");

@@ -26,7 +26,7 @@ const createTree = (employees, Employee) => {
     });
     let employeeTree = [];
     employees.forEach(employeeData => {
-        if (employeeData.managerId || employeeData.managerId >= 0) {
+        if (employeeData.managerId >= 0) {
             hashTable[employeeData.managerId].children.push(hashTable[employeeData.employeeId]);
         } else {
             employeeTree.push(hashTable[employeeData.employeeId]);
