@@ -27,6 +27,9 @@ You will only be able to connect to the cluster from the IP addresses added to t
    - Returns a JSON object containing a tree structure of the entire dataset
 - Get all employees: `X/employees/{company name}/flat`
    - Returns all of the employees in the company
+   - To display employee image:
+     - Convert `{employee object}.img.buffer.data` to a base64 string
+     - Set img.src to `"data:image/png;base64," + {base64 image string}`
 
 ### POST
 - Import employees: `X/employees/import`
@@ -35,6 +38,11 @@ You will only be able to connect to the cluster from the IP addresses added to t
        - `employeeJSON` = employee JSON file user uploads
        - `company` = name of company data belongs to
 
+- Upload employee image: `X/employees/{company name}/upload-image`
+  - Saves a profile image for an employee in the database
+  - Data posted must be of type `multipart/form-data` with two fields:
+     - `employeeImg` = the image file
+     - `employeeId` = id of employee
 
 - Create new employee: `X/employees/{company name}/add`
    - Required body fields: `firstName`, `lastName`, `password`, `companyName`, `isManager`, `employeeId`, `managerId`, `email`
