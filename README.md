@@ -26,7 +26,7 @@ Note: all endpoints require authentication header
 ### GET
 - Get employee tree: `X/employees/tree`
    - Returns a JSON object containing a tree structure of the entire dataset
-- Get all employees: `X/employees/{company name}/flat`
+- Get all employees: `X/employees/flat`
    - Returns all of the employees in the company
 
 - Backend query: `X/employees/query`
