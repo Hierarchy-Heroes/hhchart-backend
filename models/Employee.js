@@ -40,7 +40,7 @@ const EmployeeSchema = mongoose.Schema({
         contentType: String
     },
     teamId: String,
-    children: [this]
+    children: []
 });
 
 module.exports = mongoose.model('Employee', EmployeeSchema, "employees");
