@@ -43,6 +43,4 @@ const EmployeeSchema = mongoose.Schema({
     children: [this]
 });
 
-module.exports = (collectionName) => {
-    return mongoose.model('Employee', EmployeeSchema, collectionName);;
-};
+module.exports = mongoose.model('Employee', EmployeeSchema, "employees");
