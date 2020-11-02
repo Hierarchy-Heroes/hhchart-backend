@@ -32,6 +32,29 @@ const updateEmployee = async (id, update, collectionName, res) => {
     });
 }
 
+const reassignDirectReports = async (employeeId, managerId, res) => {
+  const Employee = require('../models/Employee');
+  try {
+    //get the direct reports of the employee
+    const directReportsQuery = Employee.find({"managerId": employeeId});
+
+    directReportsQuery.exec((err, directReports) => {
+      if(err) {
+        return res.status(400).send("Reassigning direct reports error: " + err.message);
+      }
+
+      directReports.forEach(async (employeeData) => {
+          //change manager of each direct report
+          await updateEmployee(employeeData._id, {"managerId": managerId}, res);
+      });
+
+    });
+
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+}
+
 /**
 * Creates a new Employee schema object with the passed in employee data.
 * @param {Schema} Employee
@@ -59,5 +82,6 @@ module.exports = {
     findEmployee: findEmployee,
     removeEmployee: removeEmployee,
     updateEmployee: updateEmployee,
+    reassignDirectReports: reassignDirectReports,
     createEmployee: createEmployee
-}; 
+};
