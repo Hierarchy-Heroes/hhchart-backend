@@ -25,12 +25,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.get('/:companyName/tree', verifyToken, async (req, res) => {
+router.get('/tree', verifyToken, async (req, res) => {
     try {
-        const Employee = require('../models/Employee')(req.params.companyName);
+        const Employee = require('../models/Employee');
         const employees = await Employee.find();
-        const treeData = createTree(sanitizeJSON(employees), Employee); 
-        res.json(treeData[0]);
+        const treeData = createTree(sanitizeJSON(employees), Employee);
+        res.json(treeData);
     } catch (err) {
         res.json({
             message: err.message
@@ -43,11 +43,9 @@ router.get('/:companyName/tree', verifyToken, async (req, res) => {
 * employee.img.buffer.data must be converted to a base64 string.
 * Then you can set img.src to "data:image/png;base64," + {base64 image string}
 */
-router.get('/:companyName/flat', verifyToken, async (req, res) => {
+router.get('/flat', verifyToken, async (req, res) => {
     try {
-        //passes in collection name (in this case, the company)
-        //TODO: modify collection name to get the company from the currently logged in user
-        const Employee = require('../models/Employee')(trimSpaces(req.params.companyName));
+        const Employee = require('../models/Employee');
         const employees = await Employee.find();
         res.json(employees);
     } catch (err) {
@@ -58,7 +56,7 @@ router.get('/:companyName/flat', verifyToken, async (req, res) => {
 });
 
 /* create a new employee */
-router.post('/:companyName/add', verifyToken, verifyManager, async (req, res) => {
+router.post('/add', verifyToken, verifyManager, async (req, res) => {
     //if manager id is missing, set to -1
     if (req.body.managerId == undefined) {
         req.body.managerId = Number(-1);
@@ -70,7 +68,7 @@ router.post('/:companyName/add', verifyToken, verifyManager, async (req, res) =>
         return res.status(400).send(error.details[0].message);
     }
 
-    const credentialsExists = await emailInUse(req.body.email, trimSpaces(req.user._company), res);
+    const credentialsExists = await emailInUse(req.body.email, res);
 
     if (credentialsExists) {
         return res.status(400).send("User: " + req.body.email + " already exists.");
@@ -83,7 +81,7 @@ router.post('/:companyName/add', verifyToken, verifyManager, async (req, res) =>
         }
         req.body.password = hash;
 
-        const Employee = require('../models/Employee')(trimSpaces(req.user._company));
+        const Employee = require('../models/Employee');
         const newEmployee = createEmployee(Employee, req.body);
 
         try {
@@ -95,7 +93,7 @@ router.post('/:companyName/add', verifyToken, verifyManager, async (req, res) =>
     });
 });
 
-router.post('/:companyName/update', verifyToken, verifyManager, async (req, res) => {
+router.post('/update', verifyToken, verifyManager, async (req, res) => {
     const employeeId = req.body._id;
     if (employeeId === undefined) {
         return res.status(400).send('Missing employee id');
@@ -103,26 +101,24 @@ router.post('/:companyName/update', verifyToken, verifyManager, async (req, res)
     if (typeof (req.body.update) !== "object") {
         return res.status(400).send('Update data is missing or has incorrect format');
     }
-    const employeeToUpdate = await findEmployee({ _id: employeeId },
-        trimSpaces(req.params.companyName), res);
+    const employeeToUpdate = await findEmployee({ _id: employeeId }, res);
     if (!employeeToUpdate) {
         return res.status(400).send('employee does not exist');
     }
-    updateEmployee(employeeToUpdate._id, req.body.update, trimSpaces(req.params.companyName), res);
-    return res.status(200).send("successfully updated employee with id: " + employeeToRemove._id);
+    updateEmployee(employeeToUpdate._id, req.body.update, res);
+    return res.status(200).send("successfully updated employee with id: " + employeeToUpdate._id);
 });
 
-router.post('/:companyName/remove', verifyToken, verifyManager, async (req, res) => {
+router.post('/remove', verifyToken, verifyManager, async (req, res) => {
     const employeeId = req.body._id;
     if (employeeId === undefined) {
         return res.status(400).send('Missing employee id');
     }
-    const employeeToRemove = await findEmployee({ _id: employeeId },
-        trimSpaces(req.params.companyName), res);
+    const employeeToRemove = await findEmployee({ _id: employeeId },res);
     if (!employeeToRemove) {
         return res.status(400).send('employee does not exist');
     }
-    removeEmployee(employeeToRemove._id, trimSpaces(req.params.companyName), res);
+    removeEmployee(employeeToRemove._id, res);
     return res.status(200).send("successfully removed employee with id: " + employeeToRemove._id);
 });
 
@@ -131,9 +127,9 @@ router.post('/:companyName/remove', verifyToken, verifyManager, async (req, res)
  * search the organization by teams, employees, and other
  * NOTE: query has to be a javascript object
  */
-router.get('/:companyName/query', async (req, res) => {
+router.get('/query', async (req, res) => {
     try {
-        const employee = await findEmployee(req.body.query, trimSpaces(req.params.companyName), res);
+        const employee = await findEmployee(req.body.query, res);
         res.json(employee);
     } catch (err) {
         res.status(400).send('query error');
@@ -143,37 +139,29 @@ router.get('/:companyName/query', async (req, res) => {
 /**
  * retrieve the document of the current authenticated user
  */
-router.get('/:companyName/usr', async (req, res) => {
+router.get('/usr', async (req, res) => {
     const token = req.header('auth-token');
     if (!token) {
         return res.status(401).send('Access Denied');
     }
     try {
         const verified = jwt.verify(token, process.env.JWT_SECRET);
-        const authenticatedUser = await findEmployee({"_id": verified._id}, req.params.companyName, res); 
+        const authenticatedUser = await findEmployee({"_id": verified._id},res);
         res.status(200).send(authenticatedUser)
     } catch (err) {
-        res.status(400).send('error retrieving currently authenticated user: ' + err.message); 
+        res.status(400).send('error retrieving currently authenticated user: ' + err.message);
     }
 });
 
 /**
 Parses uploaded JSON file and imports all employee data to company's collection.
 The data POSTed must be of type multipart/form-data and the form field name for the file input
-must be "employeeJSON". A "company" field is also required with the name of the company the data belongs to.
+must be "employeeJSON".
 */
 
-router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager, async (req, res) => {
-    //if the company name is missing
-    if (req.body.company == undefined) {
-        fs.unlinkSync(req.file.path);
-        return res.status(400).send("Missing company name.");
-    }
-
-    const company = req.body.company.replace(/\s/g, '');
-
-    //passes in collection name (in this case, the company)
-    const Employee = require('../models/Employee')(company);
+router.post('/import', upload.single("employeeJSON"), verifyToken,
+    verifyManager, async (req, res) => {
+    const Employee = require('../models/Employee');
 
     fs.readFile(req.file.path, async function (err, data) {
         const employees = JSON.parse(data);
@@ -194,7 +182,7 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
               return res.status(400).send(error.details[0].message);
           }
 
-          const credentialsExists = await emailInUse(employee.email, company, res);
+          const credentialsExists = await emailInUse(employee.email, res);
 
           if (credentialsExists) {
               return res.status(400).send("User: " + employee.email + " already exists.");
@@ -207,9 +195,6 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
               employee.password = hash;
 
               const employeeObj = createEmployee(Employee, employee);
-
-              //to make sure flat and tree collections have the same id
-              employeeObj._id = idMap[employee.employeeId]._id;
 
               try {
                   const savedEmployee = await employeeObj.save();
@@ -224,25 +209,26 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
 
 /**
 * Upload an employee image and store it in their document.
-* Required body parameters: _id of the employee's document 
+* Required body parameters: _id of the employee's document
 */
-router.post('/:companyName/upload-image', upload.single("employeeImg"), verifyToken,
+router.post('/upload-image', upload.single("employeeImg"), verifyToken,
     verifyManager, async (req, res) => {
-        //if the company name is missing
-        if (req.body.employeeId == undefined) {
+
+        const employeeId = req.body._id;
+        if (employeeId == undefined) {
             fs.unlinkSync(req.file.path);
             return res.status(400).send("Missing employee ID.");
         }
 
         const img = {
-            data: fs.readFileSync(req.file.path),
+            buffer: fs.readFileSync(req.file.path),
             contentType: req.file.mimetype
         };
 
-        const employee = await findEmployee({ "_id": req.body.employeeId }, trimSpaces(req.params.companyName), res);
+        const employee = await findEmployee({ "_id": employeeId }, res);
 
         if (!employee) {
-            return res.status(400).send("employee with id: " + req.body.employeeId + " does not exist.");
+            return res.status(400).send("employee with id: " + employeeId + " does not exist.");
         }
 
         employee.img = img;
