@@ -20,8 +20,7 @@ const verifyToken = (req, res, next) => {
 };
 
 const verifyManager = async (req, res, next) => {
-    const employee = await findEmployee({ "_id": req.user._id },
-        trimSpaces(req.user._company), res);
+    const employee = await findEmployee({ "_id": req.user._id }, res);
     if (!employee) {
         return res.status(404).send('Employee not found');
     }
