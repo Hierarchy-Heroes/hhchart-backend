@@ -1,12 +1,7 @@
-
 const mongoose = require('mongoose');
 
 const RequestSchema = mongoose.Schema({
     employeeId: {
-      type: String,
-      required: true
-    },
-    currentManagerId: {
       type: String,
       required: true
     },
@@ -16,4 +11,4 @@ const RequestSchema = mongoose.Schema({
     }
 });
 
-module.exports = return mongoose.model('Request', RequestSchema, 'requests');
+module.exports = mongoose.model('Request', RequestSchema, 'requests');
