@@ -66,5 +66,5 @@ Note: all endpoints require authentication header
 #### Manager Controls
 - Update Employee: `X/employees/{company name}/update/{_id: employeeId, update: {fields to update}}`
 - Remove Employee: `X/employees/{company name}/remove/{_id: employeeId}`
-- Transfer Request: `X/employees/transfer-request/{_id: employeeId, newManagerId: "_id of new manager"}`
-- Approve/Deny Transfer: `X/employees/transfer/{_id: requestId, approve: <boolean>}`
+- Create Transfer Request: `X/employees/transfer-request/{_id: employeeId, newManagerId: "_id of new manager"}`
+- Approve/Deny Transfer: `X/employees/transfer/{_id: requestId, approved: <boolean>}`
