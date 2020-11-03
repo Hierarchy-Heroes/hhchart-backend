@@ -1,5 +1,3 @@
-const { createEmployee } = require('./interface/IEmployee');
-
 const sanitizeJSON = (clusterData) => {
     cleanData = []; 
     clusterData.forEach(documentData => {
@@ -12,8 +10,7 @@ const sanitizeJSON = (clusterData) => {
 * Generate's a tree structure of employees.
 * @param {[Object]} employees
 * @param {Schema} Employee
-* @return {[[Schema], Object]} -- an tree structure containing Employee schema objects,
-*                                 a hash table mapping employee ids to Employee schema object
+* @return {[Schema]} -- a tree structure containing Employee schema objects
 */
 const createTree = (employees, Employee) => {
     let hashTable = Object.create(null);
@@ -22,7 +19,7 @@ const createTree = (employees, Employee) => {
       let employeeCopy = { ...employeeData, children: [] };
       delete employeeCopy.password;
 
-      hashTable[employeeData.employeeId] = createEmployee(Employee, employeeCopy);
+      hashTable[employeeData.employeeId] = employeeCopy;
     });
     let employeeTree = [];
     employees.forEach(employeeData => {
@@ -32,7 +29,7 @@ const createTree = (employees, Employee) => {
             employeeTree.push(hashTable[employeeData.employeeId]);
         }
     });
-    return [employeeTree, hashTable];
+    return employeeTree;
 }
 
 
