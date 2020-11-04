@@ -63,9 +63,9 @@ Note: all endpoints require authentication header
    - Returns JSON web token valid for 2 hours
 
 #### Manager Controls
-- Update Employee: `X/employees/{company name}/update/{_id: employeeId, update: {fields to update}}`
-- Remove Employee: `X/employees/{company name}/remove/{_id: employeeId}`
+- Update Employee: `X/employees/update/{_id: employeeId, update: {fields to update}}`
+- Remove Employee: `X/employees/remove/{_id: employeeId}`
 - Create Transfer Request: `X/employees/transfer-request/{employeeId: "id of employee to transfer"}`
   - New manager makes a request to transfer employee to their team
-- Approve/Deny Transfer: `X/employees/transfer/{_id: requestId, approved: <boolean>}`
+- Approve/Deny Transfer: `X/employees/transfer/{requestId: "id of request", approved: <boolean>}`
   - Old manager approves/denies request to transfer employee
