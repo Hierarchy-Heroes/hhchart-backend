@@ -35,6 +35,10 @@ Note: all endpoints require authentication header
 - Get currently authenticated user: `X/employees/usr`
    - returns document of user corresponding to the passed auth token
 
+#### Manager Controls
+- Get all transfer requests that need to be approved by given employee (should be a manager): `X/employees/transfer-requests`
+  - `body`: `{_id: employeeId}`
+
 ### POST
 - Import employees: `X/employees/import`
    - Imports employee data from uploaded JSON file into database
@@ -59,5 +63,9 @@ Note: all endpoints require authentication header
    - Returns JSON web token valid for 2 hours
 
 #### Manager Controls
-- Update Employee: `X/employees/update/{_id: employeeId, update: {fields to update}}`
-- Remove Employee: `X/employees/remove/{_id: employeeId}`
+- Update Employee: `X/employees/{company name}/update/{_id: employeeId, update: {fields to update}}`
+- Remove Employee: `X/employees/{company name}/remove/{_id: employeeId}`
+- Create Transfer Request: `X/employees/transfer-request/{employeeId: "id of employee to transfer"}`
+  - New manager makes a request to transfer employee to their team
+- Approve/Deny Transfer: `X/employees/transfer/{_id: requestId, approved: <boolean>}`
+  - Old manager approves/denies request to transfer employee
