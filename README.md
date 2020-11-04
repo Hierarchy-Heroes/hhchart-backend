@@ -36,8 +36,7 @@ Note: all endpoints require authentication header
    - returns document of user corresponding to the passed auth token
 
 #### Manager Controls
-- Get all transfer requests that need to be approved by given employee (should be a manager): `X/employees/transfer-requests`
-  - `body`: `{_id: employeeId}`
+- Get all transfer requests that need to be approved by logged in employee (should be a manager): `X/employees/transfer-requests`
 
 ### POST
 - Import employees: `X/employees/import`

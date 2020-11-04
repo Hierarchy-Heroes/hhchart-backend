@@ -114,7 +114,7 @@ router.post('/update', verifyToken, verifyManager, async (req, res) => {
 * Endpoint to make a employee transfer request (change manager).
 */
 router.post('/transfer-request', verifyToken, verifyManager, async (req, res) => {
-    //the person making the request is the new manager
+    //the person making the request is the new manager (currently logged in)
     const newManagerId = req.user._id;
     const employeeId = req.body.employeeId;
 
@@ -123,10 +123,14 @@ router.post('/transfer-request', verifyToken, verifyManager, async (req, res) =>
     }
 
     const employeeToTransfer = await findEmployee({ _id: employeeId }, res);
+    const newManager = await findEmployee({ _id: newManagerId }, res);
 
     //make sure employee is valid
     if (!employeeToTransfer) {
         return res.status(400).send('Employee does not exist.');
+    //make sure the new manager is different from current manager
+    } else if (employeeToTransfer.managerId === newManager.employeeId) {
+        return res.status(400).send('Employee is already under manager: ' + newManagerId);
     }
 
     const Request = require('../models/Request');
@@ -227,11 +231,11 @@ router.post('/remove', verifyToken, verifyManager, async (req, res) => {
 });
 
 /**
-* Endpoint to get all transfer requests that need to be approved by given employee.
+* Endpoint to get all transfer requests that need to be approved by logged in employee.
 */
 router.get('/transfer-requests', verifyToken, verifyManager, async (req, res) => {
-    //id of manager we need approval from
-    const employeeId = req.body._id;
+    //id of manager we need approval from (logged in user)
+    const employeeId = req.user._id;
 
     try {
       const Request = require('../models/Request');
