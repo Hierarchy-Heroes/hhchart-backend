@@ -209,7 +209,20 @@ router.post('/remove', verifyToken, verifyManager, async (req, res) => {
     if (!employeeToRemove) {
         return res.status(400).send('employee does not exist');
     }
-    removeEmployee(employeeToRemove._id, res);
+
+    //reassign direct reports to employee's manager
+    await reassignDirectReports(employeeToRemove.employeeId, employeeToRemove.managerId, res);
+
+    await removeEmployee(employeeToRemove._id, res);
+
+    //remove existing requests involving employee
+    const Request = require('../models/Request');
+    Request.remove({$or: [{"employeeId": employeeId}, {"newManagerId": employeeId}]}, (err) => {
+      if (err) {
+          return res.status(400).send("Removing request error: " + err.message);
+      }
+    });
+
     return res.status(200).send("successfully removed employee with id: " + employeeToRemove._id);
 });
 
