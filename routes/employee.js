@@ -55,7 +55,6 @@ router.get('/flat', verifyToken, async (req, res) => {
     }
 });
 
-//need to specify direct reports
 /* create a new employee */
 router.post('/add', verifyToken, verifyManager, async (req, res) => {
     //if manager id is missing, set to -1
@@ -95,6 +94,7 @@ router.post('/add', verifyToken, verifyManager, async (req, res) => {
 });
 
 router.post('/update', verifyToken, verifyManager, async (req, res) => {
+  //TODO: check if the manager is actually the manager of employee
     const employeeId = req.body._id;
     if (employeeId === undefined) {
         return res.status(400).send('Missing employee id');
@@ -114,22 +114,19 @@ router.post('/update', verifyToken, verifyManager, async (req, res) => {
 * Endpoint to make a employee transfer request (change manager).
 */
 router.post('/transfer-request', verifyToken, verifyManager, async (req, res) => {
-    const employeeId = req.body._id;
-    const newManagerId = req.body.newManagerId;
+    //the person making the request is the new manager
+    const newManagerId = req.user._id;
+    const employeeId = req.body.employeeId;
+
     if (employeeId === undefined || newManagerId == undefined) {
-        return res.status(400).send('Missing employee id');
+        return res.status(400).send('Missing employee id.');
     }
 
     const employeeToTransfer = await findEmployee({ _id: employeeId }, res);
-    const newManager = await findEmployee({ _id: newManagerId }, res);
 
-    //make sure employee and new manager are valid
+    //make sure employee is valid
     if (!employeeToTransfer) {
         return res.status(400).send('Employee does not exist.');
-    }
-
-    if(!newManager) {
-      return res.status(400).send('Manager does not exist.');
     }
 
     const Request = require('../models/Request');
@@ -151,7 +148,8 @@ router.post('/transfer-request', verifyToken, verifyManager, async (req, res) =>
 * Endpoint to approve or deny an employee transfer.
 */
 router.post('/transfer', verifyToken, verifyManager, async (req, res) => {
-    const requestId = req.body._id;
+  //TODO: check if manager approving/denying is actually the manager of the employee
+    const requestId = req.body.requestId;
     const approved = req.body.approved;
     const Request = require('../models/Request');
 
@@ -166,6 +164,7 @@ router.post('/transfer', verifyToken, verifyManager, async (req, res) => {
         const employeeToTransfer = await findEmployee({ _id: request.employeeId }, res);
         const newManager = await findEmployee({ _id: request.newManagerId }, res);
 
+        //make sure employee and new manager exist
         if (!employeeToTransfer || !newManager) {
           return res.status(400).send("Employee does not exist.");
         }
@@ -176,6 +175,7 @@ router.post('/transfer', verifyToken, verifyManager, async (req, res) => {
         //assign new manager
         await updateEmployee(employeeToTransfer._id, {"managerId": newManager.employeeId}, res);
 
+        //remove request because we are done with it now
         Request.findByIdAndRemove(requestId, (err) => {
             if (err) {
                 return res.status(400).send("Removing request error: " + err.message);
@@ -199,8 +199,8 @@ router.post('/transfer', verifyToken, verifyManager, async (req, res) => {
 
 });
 
-//TODO: when deleting an employee, we need to remove any transfer requests involving them
-router.post('/:companyName/remove', verifyToken, verifyManager, async (req, res) => {
+router.post('/remove', verifyToken, verifyManager, async (req, res) => {
+  //TODO: check if the manager is actually the manager of employee
     const employeeId = req.body._id;
     if (employeeId === undefined) {
         return res.status(400).send('Missing employee id');
