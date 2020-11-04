@@ -40,7 +40,7 @@ describe('Manager: authentication and tree generation sequence working as intend
     });
     it('authenticated user can access tree data', (done) => {
         request(app)
-            .get('/employees/CycloneAviation/tree')
+            .get('/employees/tree')
             .set({ 'auth-token': tokenManager, Accept: 'application/json' })
             .expect((res) => {
                 if (!(typeof (res.body) == "object")) throw new Error('Tree request returns data with incorrect format');
@@ -51,7 +51,7 @@ describe('Manager: authentication and tree generation sequence working as intend
     });
     it('authenticated user can access flat data', (done) => {
         request(app)
-            .get('/employees/CycloneAviation/flat')
+            .get('/employees/flat')
             .set({ 'auth-token': tokenManager, Accept: 'application/json' })
             .expect((res) => {
                 if (!(typeof (res.body) == "object")) throw new Error('Flat list request returns data with incorrect format');
@@ -76,7 +76,7 @@ describe('Non-manager: authentication and tree generation sequence working as in
     });
     it('authenticated user can access tree data', (done) => {
         request(app)
-            .get('/employees/CycloneAviation/tree')
+            .get('/employees/tree')
             .set({ 'auth-token': tokenNonManager, Accept: 'application/json' })
             .expect((res) => {
                 if (!(typeof (res.body) == "object")) throw new Error('Tree request returns data with incorrect format');
@@ -87,7 +87,7 @@ describe('Non-manager: authentication and tree generation sequence working as in
     });
     it('authenticated user can access flat data', (done) => {
         request(app)
-            .get('/employees/CycloneAviation/flat')
+            .get('/employees/flat')
             .set({ 'auth-token': tokenNonManager, Accept: 'application/json' })
             .expect((res) => {
                 if (!(typeof (res.body) == "object")) throw new Error('Flat list request returns data with incorrect format');

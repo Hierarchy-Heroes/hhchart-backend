@@ -76,9 +76,9 @@ const validateLogin = (value) => {
  * @param {*} result print to result in case of error
  * @param {*} collectionName specifies the collection to parse in search
  */
-const emailInUse = async (emailValue, collectionName, res) => {
+const emailInUse = async (emailValue, res) => {
     try {
-        const user = await findEmployee({ email: emailValue }, collectionName, res);
+        const user = await findEmployee({ email: emailValue }, res);
         return user;
     } catch (err) {
         return res.status(400).send(err.message);

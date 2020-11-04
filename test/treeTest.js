@@ -4,7 +4,7 @@ const smallds = require('./sampleData/small.json');
 const cycloneAviationData = require('./sampleData/cycloneAviation.json');
 const { createTree } = require('../treeConstruction');
 
-const Employee = require('../models/Employee')("CycloneAviation"); 
+const Employee = require('../models/Employee');
 
 const verifyTree = (node) => {
     if (!node) { return true; }
@@ -22,7 +22,7 @@ const verifyTree = (node) => {
 }
 
 describe('Simple Tree Construction', () => {
-    const smallTree = createTree(smallds, Employee)[0],
+    const smallTree = createTree(smallds, Employee),
         smallTreeRoot = smallTree[0];
     
     it('small tree constructed correctly', () => {
@@ -34,7 +34,7 @@ describe('Simple Tree Construction', () => {
 });
 
 describe('Given Data Construction', () => {
-    const cycloneAviationTree = createTree(cycloneAviationData, Employee)[0],
+    const cycloneAviationTree = createTree(cycloneAviationData, Employee),
         cycloneAviationRoot = cycloneAviationTree[0];
 
     it('large tree constructed correctly', () => {
@@ -46,4 +46,3 @@ describe('Given Data Construction', () => {
 });
 
 module.exports.verifyTree = verifyTree;
-

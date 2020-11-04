@@ -5,8 +5,8 @@
  * @param {*} collectionName specifies which collection to parse in search of this employee
  */
 
-const findEmployee = async (query, collectionName, res) => {
-    const Employee = require('../models/Employee')(collectionName);
+const findEmployee = async (query, res) => {
+    const Employee = require('../models/Employee');
     return Employee.findOne(query, (err) => {
         if (err) {
             return res.status(400).send("Finding employee error: " + err.message);
@@ -14,8 +14,8 @@ const findEmployee = async (query, collectionName, res) => {
     });
 };
 
-const removeEmployee = async (id, collectionName, res) => {
-    const Employee = require('../models/Employee')(collectionName);
+const removeEmployee = async (id, res) => {
+    const Employee = require('../models/Employee');
     Employee.findByIdAndRemove(id, (err) => {
         if (err) {
             return res.status(400).send("Removing employee error: " + err.message);
@@ -23,8 +23,8 @@ const removeEmployee = async (id, collectionName, res) => {
     });
 }
 
-const updateEmployee = async (id, update, collectionName, res) => {
-    const Employee = require('../models/Employee')(collectionName);
+const updateEmployee = async (id, update, res) => {
+    const Employee = require('../models/Employee');
     Employee.findByIdAndUpdate(id, { $set: update }, (err) => {
         if (err) {
             return res.status(400).send("Updating employee error: " + err.message);
