@@ -33,11 +33,36 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-    // TODO 
+    try {
+        const hashedPassword = await bcrypt.hash(req.body.password,8)
+        const user = await emailInUse(req.body.email, trimSpaces(req.body.companyName), res);
+
+        if(!user)
+        {
+            res.body.password = hashedPassword;
+            req.push({
+                _id: req.body._id,
+                _company: req.body.companyName
+            })
+        }
+
+    }  catch {
+        //Error in registration
+        res.redirect('/register');
+        res.json({message: "Error in registration"})
+    }
+
+    //Can now login on page
+    res.redirect('/login');
 })
 
+//Clients logout from their side + cookie deletion
 router.post('/logout', async (req, res) => {
-    // TODO 
+    await logOut(req,res);
+    req.session.destroy((err) => {
+        res.clearCookie('connect.sid');
+        res.json({message: "Logged out"})
+    });
 });
 
 module.exports = router; 
