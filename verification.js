@@ -43,7 +43,7 @@ const isAncestor = async (employee, target, res) => {
     if (employee.managerId === -1) { // reached root 
         return false; 
     }
-    const ancestor = await findEmployee({ "_id": employee.managerId }, res); 
+    const ancestor = await findEmployee({ "employeeId": employee.managerId }, res); 
     return isAncestor(ancestor, managerId, res);
 } 
 
