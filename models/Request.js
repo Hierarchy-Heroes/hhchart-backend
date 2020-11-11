@@ -8,6 +8,11 @@ const RequestSchema = mongoose.Schema({
     newManagerId: {
       type: String,
       required: true
+    },
+    transferType: {
+      type: String,
+      default: 'individual',
+      enum: ['individual', 'team']
     }
 });
 

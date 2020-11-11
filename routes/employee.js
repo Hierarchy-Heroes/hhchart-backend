@@ -114,9 +114,10 @@ router.post('/update', verifyToken, verifyManager, async (req, res) => {
 * Endpoint to make a employee transfer request (change manager).
 */
 router.post('/transfer-request', verifyToken, verifyManager, async (req, res) => {
-    //the person making the request is the new manager (currently logged in)
-    const newManagerId = req.user._id;
+    //check if the person making the request is an ancestor of employee they want to transfer
+    const newManagerId = req.body.newManagerId;
     const employeeId = req.body.employeeId;
+    const transferType = req.body.transferType; //should be either 'individual' or 'team'
 
     if (employeeId === undefined || newManagerId == undefined) {
         return res.status(400).send('Missing employee id.');
@@ -128,6 +129,9 @@ router.post('/transfer-request', verifyToken, verifyManager, async (req, res) =>
     //make sure employee is valid
     if (!employeeToTransfer) {
         return res.status(400).send('Employee does not exist.');
+    //make sure new manager is valid
+    } else if(!newManager) {
+      return res.status(400).send('Manager does not exist.');
     //make sure the new manager is different from current manager
     } else if (employeeToTransfer.managerId === newManager.employeeId) {
         return res.status(400).send('Employee is already under manager: ' + newManagerId);
@@ -138,6 +142,7 @@ router.post('/transfer-request', verifyToken, verifyManager, async (req, res) =>
     const newRequest = new Request({
             employeeId: employeeId,
             newManagerId: newManagerId,
+            transferType: transferType
     });
 
     try {
@@ -173,8 +178,10 @@ router.post('/transfer', verifyToken, verifyManager, async (req, res) => {
           return res.status(400).send("Employee does not exist.");
         }
 
-        //reassign direct reports to employee's old manager
-        await reassignDirectReports(employeeToTransfer.employeeId, employeeToTransfer.managerId, res);
+        if (request.transferType === 'individual') {
+          //reassign direct reports to employee's old manager
+          await reassignDirectReports(employeeToTransfer.employeeId, employeeToTransfer.managerId, res);
+        }
 
         //assign new manager
         await updateEmployee(employeeToTransfer._id, {"managerId": newManager.employeeId}, res);
