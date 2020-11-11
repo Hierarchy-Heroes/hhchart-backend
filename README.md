@@ -67,7 +67,7 @@ Note: all endpoints require authentication header
 - Create Transfer Request: `X/employees/transfer-request/`
   - Manager makes a request to transfer employee to a different manager
   - Required body fields:
-    - `newManagerId`: id of new managerId
+    - `newManagerId`: id of new manager
     - `employeeId`: id of employee to transfer
   - Optional body field:
     - `transferType`: either `individual` (transfer just the employee, assign direct reports to old manager) or `team` (transfer entire subtree)
