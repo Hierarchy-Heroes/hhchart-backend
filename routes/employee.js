@@ -7,7 +7,7 @@ const fs = require("fs")
 const jwt = require('jsonwebtoken');
 const { verifyToken, verifyManager } = require('../verification');
 const { validateEmployee, emailInUse } = require('../validation');
-const { createTree, sanitizeJSON } = require('../treeConstruction');
+const { createTree, sanitizeJSON, checkValidTree } = require('../treeConstruction');
 const { findEmployee, updateEmployee, removeEmployee, createEmployee, reassignDirectReports } = require('../interface/IEmployee');
 const { trimSpaces } = require('../misc/helper');
 
@@ -29,7 +29,7 @@ router.get('/tree', verifyToken, async (req, res) => {
     try {
         const Employee = require('../models/Employee');
         const employees = await Employee.find();
-        const treeData = createTree(sanitizeJSON(employees), Employee);
+        const treeData = createTree(sanitizeJSON(employees));
         res.json(treeData);
     } catch (err) {
         res.json({
@@ -290,8 +290,7 @@ The data POSTed must be of type multipart/form-data and the form field name for 
 must be "employeeJSON".
 */
 
-router.post('/import', upload.single("employeeJSON"), verifyToken,
-    verifyManager, async (req, res) => {
+router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager, async (req, res) => {
     const Employee = require('../models/Employee');
 
     fs.readFile(req.file.path, async function (err, data) {
@@ -299,6 +298,10 @@ router.post('/import', upload.single("employeeJSON"), verifyToken,
 
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
+
+        checkValidTree(employees, res);
+
+        return res.status(200).send("valid data");
 
         //store individual employees
         for (i in employees) {
