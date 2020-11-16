@@ -11,6 +11,9 @@ const { createTree, sanitizeJSON } = require('../treeConstruction');
 const { findEmployee, updateEmployee, removeEmployee, createEmployee } = require('../interface/IEmployee');
 const { trimSpaces } = require('../misc/helper');
 
+global.treeCache = undefined; 
+global.flatCache = undefined; 
+
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
 //A folder named "uploads" must exist in directory.
@@ -23,13 +26,28 @@ const storage = multer.diskStorage({
     }
 });
 
+const updateCaches = async () => {
+    console.log("updating caches");
+    const Employee = require('../models/Employee'); 
+    const employees = await Employee.find(); 
+
+    global.flatCache = employees; 
+    global.treeCache = createTree(sanitizeJSON(employees), Employee); 
+}
+
 const upload = multer({ storage: storage });
 
 router.get('/tree', verifyToken, async (req, res) => {
     try {
         const Employee = require('../models/Employee');
         const employees = await Employee.find();
-        const treeData = createTree(sanitizeJSON(employees), Employee);
+        let treeData; 
+        if (global.treeCache !== undefined) {
+            treeData = global.treeCache; 
+        } else {
+            treeData = createTree(sanitizeJSON(employees), Employee);
+            global.treeCache = treeData; 
+        }
         res.json(treeData);
     } catch (err) {
         res.json({
@@ -46,7 +64,13 @@ router.get('/tree', verifyToken, async (req, res) => {
 router.get('/flat', verifyToken, async (req, res) => {
     try {
         const Employee = require('../models/Employee');
-        const employees = await Employee.find();
+        let employees; 
+        if (global.flatCache !== undefined) {
+            employees = global.flatCache; 
+        } else {
+            employees = await Employee.find();    
+            global.flatCache = employees; 
+        }
         res.json(employees);
     } catch (err) {
         res.json({
@@ -86,6 +110,7 @@ router.post('/add', verifyToken, verifyManager, async (req, res) => {
 
         try {
             const savedEmployee = await newEmployee.save();
+            updateCaches(); 
             return res.status(200).send("Employee data uploaded successfully.");
         } catch (err) {
             return res.status(500).send(err.message);
@@ -95,6 +120,7 @@ router.post('/add', verifyToken, verifyManager, async (req, res) => {
 
 router.post('/update', verifyToken, verifyManager, async (req, res) => {
     const employeeId = req.body._id;
+    console.log(employeeId)
     if (employeeId === undefined) {
         return res.status(400).send('Missing employee id');
     }
@@ -106,6 +132,7 @@ router.post('/update', verifyToken, verifyManager, async (req, res) => {
         return res.status(400).send('employee does not exist');
     }
     updateEmployee(employeeToUpdate._id, req.body.update, res);
+    updateCaches(); 
     return res.status(200).send("successfully updated employee with id: " + employeeToUpdate._id);
 });
 
@@ -119,6 +146,7 @@ router.post('/remove', verifyToken, verifyManager, async (req, res) => {
         return res.status(400).send('employee does not exist');
     }
     removeEmployee(employeeToRemove._id, res);
+    updateCaches(); 
     return res.status(200).send("successfully removed employee with id: " + employeeToRemove._id);
 });
 
