@@ -57,9 +57,23 @@ router.get('/flat', verifyToken, async (req, res) => {
 
 /* create a new employee */
 router.post('/add', verifyToken, verifyManager, async (req, res) => {
+    const Employee = require('../models/Employee');
     //if manager id is missing, set to -1
     if (req.body.managerId == undefined) {
         req.body.managerId = Number(-1);
+    }
+
+    if (req.body.employeeId == -1) {
+        const employees = await Employee.find();
+        let lastEmployeeId = 0;
+        for (i in employees) {
+            let employee = employees[i];
+            console.log(employee.employeeId);
+            if (employee.employeeId > lastEmployeeId) {
+                lastEmployeeId = employee.employeeId;
+            }
+        } 
+        req.body.employeeId = lastEmployeeId + 1;
     }
 
     const { error } = validateEmployee(req.body);
