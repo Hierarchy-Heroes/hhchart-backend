@@ -11,8 +11,8 @@ const { createTree, sanitizeJSON } = require('../treeConstruction');
 const { findEmployee, updateEmployee, removeEmployee, createEmployee } = require('../interface/IEmployee');
 const { trimSpaces } = require('../misc/helper');
 
-global.treeCache = undefined; 
-global.flatCache = undefined; 
+var treeCache = undefined; 
+var flatCache = undefined; 
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
@@ -31,8 +31,8 @@ const updateCaches = async () => {
     const Employee = require('../models/Employee'); 
     const employees = await Employee.find(); 
 
-    global.flatCache = employees; 
-    global.treeCache = createTree(sanitizeJSON(employees), Employee); 
+    flatCache = employees; 
+    treeCache = createTree(sanitizeJSON(employees), Employee); 
 }
 
 const upload = multer({ storage: storage });
@@ -40,13 +40,13 @@ const upload = multer({ storage: storage });
 router.get('/tree', verifyToken, async (req, res) => {
     try {
         const Employee = require('../models/Employee');
-        const employees = await Employee.find();
         let treeData; 
-        if (global.treeCache !== undefined) {
-            treeData = global.treeCache; 
+        if (treeCache !== undefined) {
+            treeData = treeCache; 
         } else {
+			const employees = await Employee.find();
             treeData = createTree(sanitizeJSON(employees), Employee);
-            global.treeCache = treeData; 
+            treeCache = treeData; 
         }
         res.json(treeData);
     } catch (err) {
@@ -65,11 +65,11 @@ router.get('/flat', verifyToken, async (req, res) => {
     try {
         const Employee = require('../models/Employee');
         let employees; 
-        if (global.flatCache !== undefined) {
-            employees = global.flatCache; 
+        if (flatCache !== undefined) {
+            employees = flatCache; 
         } else {
             employees = await Employee.find();    
-            global.flatCache = employees; 
+            flatCache = employees; 
         }
         res.json(employees);
     } catch (err) {
