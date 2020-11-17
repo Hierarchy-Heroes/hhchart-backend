@@ -18,7 +18,7 @@ const validEmployeeSchema = Joi.object({
 
     password: Joi.string()
         .min(4)
-        .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
+        .pattern(new RegExp('^[a-zA-Z0-9]{4,30}$'))
         .required(),
 
     positionTitle: Joi.string(),
@@ -45,12 +45,9 @@ const validLoginCredentials = Joi.object({
         .email()
         .required(),
 
-    companyName: Joi.string()
-        .required(),
-
     password: Joi.string()
         .min(4)
-        .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
+        .pattern(new RegExp('^[a-zA-Z0-9]{4,30}$'))
         .required(),
 });
 

@@ -22,7 +22,7 @@ const verifyTree = (node) => {
 }
 
 describe('Simple Tree Construction', () => {
-    const smallTree = createTree(smallds, Employee),
+    const smallTree = createTree(smallds),
         smallTreeRoot = smallTree[0];
     
     it('small tree constructed correctly', () => {
@@ -34,7 +34,7 @@ describe('Simple Tree Construction', () => {
 });
 
 describe('Given Data Construction', () => {
-    const cycloneAviationTree = createTree(cycloneAviationData, Employee),
+    const cycloneAviationTree = createTree(cycloneAviationData),
         cycloneAviationRoot = cycloneAviationTree[0];
 
     it('large tree constructed correctly', () => {

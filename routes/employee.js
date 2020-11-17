@@ -7,9 +7,12 @@ const fs = require("fs")
 const jwt = require('jsonwebtoken');
 const { verifyToken, verifyManager } = require('../verification');
 const { validateEmployee, emailInUse } = require('../validation');
-const { createTree, sanitizeJSON } = require('../treeConstruction');
 const { findEmployee, updateEmployee, removeEmployee, createEmployee, reassignDirectReports, createEmployeeId } = require('../interface/IEmployee');
+const { createTree, sanitizeJSON, checkValidTree } = require('../treeConstruction');
 const { trimSpaces } = require('../misc/helper');
+
+var treeCache = undefined;
+var flatCache = undefined; 
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
@@ -23,13 +26,28 @@ const storage = multer.diskStorage({
     }
 });
 
+const updateCaches = async () => {
+    console.log("updating caches");
+    const Employee = require('../models/Employee'); 
+    const employees = await Employee.find(); 
+
+    flatCache = employees; 
+    treeCache = createTree(sanitizeJSON(employees), Employee); 
+}
+
 const upload = multer({ storage: storage });
 
 router.get('/tree', verifyToken, async (req, res) => {
     try {
         const Employee = require('../models/Employee');
-        const employees = await Employee.find();
-        const treeData = createTree(sanitizeJSON(employees), Employee);
+        let treeData; 
+        if (treeCache !== undefined) {
+            treeData = treeCache; 
+        } else {
+			      const employees = await Employee.find();
+            treeData = createTree(sanitizeJSON(employees), Employee);
+            treeCache = treeData; 
+        }
         res.json(treeData);
     } catch (err) {
         res.json({
@@ -46,7 +64,13 @@ router.get('/tree', verifyToken, async (req, res) => {
 router.get('/flat', verifyToken, async (req, res) => {
     try {
         const Employee = require('../models/Employee');
-        const employees = await Employee.find();
+        let employees; 
+        if (flatCache !== undefined) {
+            employees = flatCache; 
+        } else {
+            employees = await Employee.find();    
+            flatCache = employees; 
+        }
         res.json(employees);
     } catch (err) {
         res.json({
@@ -110,6 +134,7 @@ router.post('/add', verifyToken, verifyManager, async (req, res) => {
 
         try {
             const savedEmployee = await newEmployee.save();
+            updateCaches(); 
             return res.status(200).send("Employee data uploaded successfully.");
         } catch (err) {
             return res.status(500).send(err.message);
@@ -120,6 +145,7 @@ router.post('/add', verifyToken, verifyManager, async (req, res) => {
 router.post('/update', verifyToken, verifyManager, async (req, res) => {
   //TODO: check if the manager is actually the manager of employee
     const employeeId = req.body._id;
+    console.log(employeeId)
     if (employeeId === undefined) {
         return res.status(400).send('Missing employee id');
     }
@@ -131,6 +157,7 @@ router.post('/update', verifyToken, verifyManager, async (req, res) => {
         return res.status(400).send('employee does not exist');
     }
     updateEmployee(employeeToUpdate._id, req.body.update, res);
+    updateCaches(); 
     return res.status(200).send("successfully updated employee with id: " + employeeToUpdate._id);
 });
 
@@ -138,9 +165,10 @@ router.post('/update', verifyToken, verifyManager, async (req, res) => {
 * Endpoint to make a employee transfer request (change manager).
 */
 router.post('/transfer-request', verifyToken, verifyManager, async (req, res) => {
-    //the person making the request is the new manager (currently logged in)
-    const newManagerId = req.user._id;
+    //check if the person making the request is an ancestor of employee they want to transfer
+    const newManagerId = req.body.newManagerId;
     const employeeId = req.body.employeeId;
+    const transferType = req.body.transferType; //should be either 'individual' or 'team'
 
     if (employeeId === undefined || newManagerId == undefined) {
         return res.status(400).send('Missing employee id.');
@@ -152,6 +180,9 @@ router.post('/transfer-request', verifyToken, verifyManager, async (req, res) =>
     //make sure employee is valid
     if (!employeeToTransfer) {
         return res.status(400).send('Employee does not exist.');
+    //make sure new manager is valid
+    } else if(!newManager) {
+      return res.status(400).send('Manager does not exist.');
     //make sure the new manager is different from current manager
     } else if (employeeToTransfer.managerId === newManager.employeeId) {
         return res.status(400).send('Employee is already under manager: ' + newManagerId);
@@ -162,6 +193,7 @@ router.post('/transfer-request', verifyToken, verifyManager, async (req, res) =>
     const newRequest = new Request({
             employeeId: employeeId,
             newManagerId: newManagerId,
+            transferType: transferType
     });
 
     try {
@@ -197,8 +229,10 @@ router.post('/transfer', verifyToken, verifyManager, async (req, res) => {
           return res.status(400).send("Employee does not exist.");
         }
 
-        //reassign direct reports to employee's old manager
-        await reassignDirectReports(employeeToTransfer.employeeId, employeeToTransfer.managerId, res);
+        if (request.transferType === 'individual') {
+          //reassign direct reports to employee's old manager
+          await reassignDirectReports(employeeToTransfer.employeeId, employeeToTransfer.managerId, res);
+        }
 
         //assign new manager
         await updateEmployee(employeeToTransfer._id, {"managerId": newManager.employeeId}, res);
@@ -240,6 +274,7 @@ router.post('/remove', verifyToken, verifyManager, async (req, res) => {
     const EmployeeId = require('../models/EmployeeId');
     const newEmployeeId = createEmployeeId(EmployeeId, employeeToRemove.employeeId);
     const savedEmployeeId = await newEmployeeId.save();
+  
     //reassign direct reports to employee's manager
     await reassignDirectReports(employeeToRemove.employeeId, employeeToRemove.managerId, res);
 
@@ -252,6 +287,9 @@ router.post('/remove', verifyToken, verifyManager, async (req, res) => {
           return res.status(400).send("Removing request error: " + err.message);
       }
     });
+
+    updateCaches(); 
+
     return res.status(200).send("successfully removed employee with id: " + employeeToRemove._id);
 });
 
@@ -308,8 +346,7 @@ The data POSTed must be of type multipart/form-data and the form field name for 
 must be "employeeJSON".
 */
 
-router.post('/import', upload.single("employeeJSON"), verifyToken,
-    verifyManager, async (req, res) => {
+router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager, async (req, res) => {
     const Employee = require('../models/Employee');
 
     fs.readFile(req.file.path, async function (err, data) {
@@ -317,6 +354,10 @@ router.post('/import', upload.single("employeeJSON"), verifyToken,
 
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
+
+        checkValidTree(employees, res);
+
+        return res.status(200).send("valid data");
 
         //store individual employees
         for (i in employees) {

@@ -41,6 +41,7 @@ Note: all endpoints require authentication header
 ### POST
 - Import employees: `X/employees/import`
    - Imports employee data from uploaded JSON file into database
+   - Create a sub-directory called `uploads` where the files can be stored
    - Data posted must be of type `multipart/form-data` with two fields:
        - `employeeJSON` = employee JSON file user uploads
 
@@ -64,7 +65,12 @@ Note: all endpoints require authentication header
 #### Manager Controls
 - Update Employee: `X/employees/update/{_id: employeeId, update: {fields to update}}`
 - Remove Employee: `X/employees/remove/{_id: employeeId}`
-- Create Transfer Request: `X/employees/transfer-request/{employeeId: "id of employee to transfer"}`
-  - New manager makes a request to transfer employee to their team
+- Create Transfer Request: `X/employees/transfer-request/`
+  - Manager makes a request to transfer employee to a different manager
+  - Required body fields:
+    - `newManagerId`: id of new manager
+    - `employeeId`: id of employee to transfer
+  - Optional body field:
+    - `transferType`: either `individual` (transfer just the employee, assign direct reports to old manager) or `team` (transfer entire subtree)
 - Approve/Deny Transfer: `X/employees/transfer/{requestId: "id of request", approved: <boolean>}`
-  - Old manager approves/denies request to transfer employee
+  - New manager approves/denies request to transfer employee
