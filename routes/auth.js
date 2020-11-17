@@ -17,19 +17,21 @@ router.post('/login', async (req, res) => {
         return res.status(401).send('user not found');
     }
 
-    const passwordMatch = await bcrypt.compare(req.body.password,user.password);
-
-    if (!passwordMatch) {
-        res.status(401).send('invalid password');
-    }
-
-    let userSignature = {
-        _id: user._id
-    };
-
-    // create and assign token to current user 
-    const token = jwt.sign(userSignature, process.env.JWT_SECRET, { expiresIn: "2h" });
-    res.header('auth-token', token).send(token);
+    bcrypt.compare(req.body.password,user.password, (err, result) => {
+        if (err) {
+            res.status(401).send('Something went wrong comparing passwords');
+        }
+        if (result) {
+            let userSignature = {
+                _id: user._id
+            };
+            // create and assign token to current user 
+            const token = jwt.sign(userSignature, process.env.JWT_SECRET, { expiresIn: "2h" });
+            res.header('auth-token', token).send(token);
+        } else {
+            res.status(401).send('Invalid Password');
+        }
+    });
 });
 
 router.post('/register', async (req, res) => {
