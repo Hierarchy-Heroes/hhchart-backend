@@ -18,7 +18,7 @@ const validEmployeeSchema = Joi.object({
 
     password: Joi.string()
         .min(4)
-        .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
+        .pattern(new RegExp('^[a-zA-Z0-9]{4,30}$'))
         .required(),
 
     positionTitle: Joi.string(),
@@ -50,7 +50,7 @@ const validLoginCredentials = Joi.object({
 
     password: Joi.string()
         .min(4)
-        .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
+        .pattern(new RegExp('^[a-zA-Z0-9]{4,30}$'))
         .required(),
 });
 
@@ -74,7 +74,6 @@ const validateLogin = (value) => {
  * verifies if the database contains a user associated with supplied email
  * @param {*} email
  * @param {*} result print to result in case of error
- * @param {*} collectionName specifies the collection to parse in search
  */
 const emailInUse = async (emailValue, res) => {
     try {
