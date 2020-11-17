@@ -78,10 +78,18 @@ const createEmployee = (Employee, employeeData) => {
     return employeeObj;
 }
 
+const createEmployeeId = (EmployeeId, employeeId) => {
+    const employeeIdObj = new EmployeeId({
+        employeeId: employeeId
+    });
+    return employeeIdObj;
+}
+
 module.exports = {
     findEmployee: findEmployee,
     removeEmployee: removeEmployee,
     updateEmployee: updateEmployee,
     reassignDirectReports: reassignDirectReports,
-    createEmployee: createEmployee
+    createEmployee: createEmployee,
+    createEmployeeId: createEmployeeId
 };

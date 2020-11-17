@@ -8,8 +8,9 @@ const jwt = require('jsonwebtoken');
 const { verifyToken, verifyManager } = require('../verification');
 const { validateEmployee, emailInUse } = require('../validation');
 const { createTree, sanitizeJSON } = require('../treeConstruction');
-const { findEmployee, updateEmployee, removeEmployee, createEmployee, reassignDirectReports } = require('../interface/IEmployee');
+const { findEmployee, updateEmployee, removeEmployee, createEmployee, reassignDirectReports, createEmployeeId } = require('../interface/IEmployee');
 const { trimSpaces } = require('../misc/helper');
+const EmployeeId = require('../models/EmployeeId');
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
@@ -58,22 +59,32 @@ router.get('/flat', verifyToken, async (req, res) => {
 /* create a new employee */
 router.post('/add', verifyToken, verifyManager, async (req, res) => {
     const Employee = require('../models/Employee');
+    const EmployeeId = require('../models/EmployeeId');
     //if manager id is missing, set to -1
     if (req.body.managerId == undefined) {
         req.body.managerId = Number(-1);
     }
-
-    if (req.body.employeeId == -1) {
+    
+    //automatically assign an ID to new employee
+    const employeeIds = await EmployeeId.find();
+    if (employeeIds.length == 0) {
         const employees = await Employee.find();
         let lastEmployeeId = 0;
         for (i in employees) {
             let employee = employees[i];
-            console.log(employee.employeeId);
             if (employee.employeeId > lastEmployeeId) {
                 lastEmployeeId = employee.employeeId;
             }
         } 
         req.body.employeeId = lastEmployeeId + 1;
+    } else {
+        req.body.employeeId = employeeIds[0].employeeId;
+        const employeeIdadded= await EmployeeId.findOne({"employeeId": employeeIds[0].employeeId});
+        EmployeeId.findByIdAndRemove(employeeIdadded, (err) => {
+            if (err) {
+                return res.status(400).send("Removing ID error: " + err.message);
+            }
+        });
     }
 
     const { error } = validateEmployee(req.body);
@@ -227,7 +238,9 @@ router.post('/remove', verifyToken, verifyManager, async (req, res) => {
     if (!employeeToRemove) {
         return res.status(400).send('employee does not exist');
     }
-
+    const EmployeeId = require('../models/EmployeeId');
+    const newEmployeeId = createEmployeeId(EmployeeId, employeeToRemove.employeeId);
+    const savedEmployeeId = await newEmployeeId.save();
     //reassign direct reports to employee's manager
     await reassignDirectReports(employeeToRemove.employeeId, employeeToRemove.managerId, res);
 
@@ -240,7 +253,6 @@ router.post('/remove', verifyToken, verifyManager, async (req, res) => {
           return res.status(400).send("Removing request error: " + err.message);
       }
     });
-
     return res.status(200).send("successfully removed employee with id: " + employeeToRemove._id);
 });
 
