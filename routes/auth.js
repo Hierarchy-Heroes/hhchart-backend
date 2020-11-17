@@ -1,5 +1,6 @@
 
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { validateLogin, emailInUse, matchPassword } = require('../validation');
@@ -16,7 +17,7 @@ router.post('/login', async (req, res) => {
         return res.status(401).send('user not found');
     }
 
-    const passwordMatch = matchPassword(req.body.password, user.password);
+    const passwordMatch = await bcrypt.compare(req.body.password,user.password);
 
     if (!passwordMatch) {
         res.status(401).send('invalid password');
