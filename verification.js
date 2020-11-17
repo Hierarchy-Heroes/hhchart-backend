@@ -47,14 +47,15 @@ const isAncestor = async (employee, target, res) => {
     return isAncestor(ancestor, managerId, res);
 } 
 
-
 const verifyAncestor = async (req, res, next) => {
     const employee = req.body.employee;
     const manager = await findEmployee({ "_id": req.user._id }, res);
     
-    const managerIsAncestor = await isAncestor(employee, manager._id, res);
+    const managerIsAncestor = await isAncestor(employee, manager.employeeId, res);
+    return managerIsAncestor; 
 }
 
 module.exports.verifyToken = verifyToken;
 module.exports.verifyManager = verifyManager;
 module.exports.verifyAncestor = verifyAncestor;
+
