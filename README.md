@@ -41,6 +41,7 @@ Note: all endpoints require authentication header
 ### POST
 - Import employees: `X/employees/import`
    - Imports employee data from uploaded JSON file into database
+   - Create a sub-directory called `uploads` where the files can be stored
    - Data posted must be of type `multipart/form-data` with two fields:
        - `employeeJSON` = employee JSON file user uploads
 
