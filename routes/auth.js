@@ -12,7 +12,7 @@ router.post('/login', async (req, res) => {
         res.status(400).send(error.details[0].message);
     }
 
-    const user = await emailInUse(req.body.email, trimSpaces(req.body.companyName), res);
+    const user = await emailInUse(req.body.email, res);
     if (!user) {
         return res.status(401).send('user not found');
     }
@@ -24,8 +24,7 @@ router.post('/login', async (req, res) => {
     }
 
     let userSignature = {
-        _id: user._id, 
-        _company: user.companyName  
+        _id: user._id
     };
 
     // create and assign token to current user 
@@ -41,4 +40,4 @@ router.post('/logout', async (req, res) => {
     // TODO 
 });
 
-module.exports = router; 
+module.exports = router;
