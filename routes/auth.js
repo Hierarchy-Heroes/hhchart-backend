@@ -23,8 +23,7 @@ router.post('/login', async (req, res) => {
     }
 
     let userSignature = {
-        _id: user._id, 
-        _company: user.companyName  
+        _id: user._id
     };
 
     // create and assign token to current user 
