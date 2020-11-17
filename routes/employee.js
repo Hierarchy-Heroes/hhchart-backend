@@ -10,7 +10,6 @@ const { validateEmployee, emailInUse } = require('../validation');
 const { createTree, sanitizeJSON } = require('../treeConstruction');
 const { findEmployee, updateEmployee, removeEmployee, createEmployee, reassignDirectReports, createEmployeeId } = require('../interface/IEmployee');
 const { trimSpaces } = require('../misc/helper');
-const EmployeeId = require('../models/EmployeeId');
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
