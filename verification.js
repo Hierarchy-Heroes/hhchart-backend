@@ -31,5 +31,31 @@ const verifyManager = async (req, res, next) => {
     }
 }
 
+/**
+ * checks if the employee has the target managerId as their ancestor 
+ * @param {*} employee 
+ * @param {*} target 
+ */
+const isAncestor = async (employee, target, res) => {
+    if (employee.managerId === target) {
+        return true; 
+    }
+    if (employee.managerId === -1) { // reached root 
+        return false; 
+    }
+    const ancestor = await findEmployee({ "employeeId": employee.managerId }, res); 
+    return isAncestor(ancestor, managerId, res);
+} 
+
+const verifyAncestor = async (req, res, next) => {
+    const employee = req.body.employee;
+    const manager = await findEmployee({ "_id": req.user._id }, res);
+    
+    const managerIsAncestor = await isAncestor(employee, manager.employeeId, res);
+    return managerIsAncestor; 
+}
+
 module.exports.verifyToken = verifyToken;
 module.exports.verifyManager = verifyManager;
+module.exports.verifyAncestor = verifyAncestor;
+
