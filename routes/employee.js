@@ -46,7 +46,6 @@ const findLastEmployeeId = async () => {
         }
     }
 }
-findLastEmployeeId();
 
 const upload = multer({ storage: storage });
 
@@ -94,7 +93,7 @@ router.get('/flat', verifyToken, async (req, res) => {
 
 /* create a new employee */
 router.post('/add', verifyToken, verifyManager, async (req, res) => {
-    const Employee = require('../models/Employee');
+    //const Employee = require('../models/Employee');
     const EmployeeId = require('../models/EmployeeId');
     //if manager id is missing, set to -1
     if (req.body.managerId == undefined) {
@@ -104,6 +103,9 @@ router.post('/add', verifyToken, verifyManager, async (req, res) => {
     //automatically assign an ID to new employee
     const employeeIds = await EmployeeId.find();
     if (employeeIds.length == 0) {
+        if (lastEmployeeId == 0) {
+            await findLastEmployeeId();
+        } 
         lastEmployeeId = lastEmployeeId + 1;
         req.body.employeeId = lastEmployeeId;
     } else {
