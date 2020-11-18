@@ -12,7 +12,8 @@ const { createTree, sanitizeJSON, checkValidTree } = require('../treeConstructio
 const { trimSpaces } = require('../misc/helper');
 
 var treeCache = undefined;
-var flatCache = undefined; 
+var flatCache = undefined;
+var lastEmployeeId = 0;
 
 //Multer storage
 //Reference: https://code.tutsplus.com/tutorials/file-upload-with-multer-in-node--cms-32088
@@ -34,6 +35,18 @@ const updateCaches = async () => {
     flatCache = employees; 
     treeCache = createTree(sanitizeJSON(employees), Employee); 
 }
+
+const findLastEmployeeId = async () => {
+    const Employee = require('../models/Employee');
+    const employees = await Employee.find();
+    for (i in employees) {
+        let employee = employees[i];
+        if (employee.employeeId > lastEmployeeId) {
+            lastEmployeeId = employee.employeeId;
+        }
+    }
+}
+findLastEmployeeId();
 
 const upload = multer({ storage: storage });
 
@@ -91,15 +104,8 @@ router.post('/add', verifyToken, verifyManager, async (req, res) => {
     //automatically assign an ID to new employee
     const employeeIds = await EmployeeId.find();
     if (employeeIds.length == 0) {
-        const employees = await Employee.find();
-        let lastEmployeeId = 0;
-        for (i in employees) {
-            let employee = employees[i];
-            if (employee.employeeId > lastEmployeeId) {
-                lastEmployeeId = employee.employeeId;
-            }
-        } 
-        req.body.employeeId = lastEmployeeId + 1;
+        lastEmployeeId = lastEmployeeId + 1;
+        req.body.employeeId = lastEmployeeId;
     } else {
         req.body.employeeId = employeeIds[0].employeeId;
         const employeeIdadded= await EmployeeId.findOne({"employeeId": employeeIds[0].employeeId});
