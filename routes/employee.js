@@ -32,8 +32,8 @@ const updateCaches = async () => {
     const Employee = require('../models/Employee'); 
     const employees = await Employee.find(); 
 
-    flatCache = employees; 
-    treeCache = createTree(sanitizeJSON(employees), Employee); 
+    flatCache = employees;
+    treeCache = await createTree(sanitizeJSON(employees), Employee);
 }
 
 const findLastEmployeeId = async () => {
@@ -57,8 +57,8 @@ router.get('/tree', verifyToken, async (req, res) => {
             treeData = treeCache; 
         } else {
 			      const employees = await Employee.find();
-            treeData = createTree(sanitizeJSON(employees), Employee);
-            treeCache = treeData; 
+            treeData = await createTree(sanitizeJSON(employees), Employee);
+            treeCache = treeData;
         }
         res.json(treeData);
     } catch (err) {
@@ -252,6 +252,7 @@ router.post('/transfer', verifyToken, verifyManager, async (req, res) => {
             }
         });
 
+        updateCaches();
         return res.status(200).send("Employee transfer complete.")
 
       } catch (err) {
@@ -296,7 +297,7 @@ router.post('/remove', verifyToken, verifyManager, async (req, res) => {
       }
     });
 
-    updateCaches(); 
+    updateCaches();
 
     return res.status(200).send("successfully removed employee with id: " + employeeToRemove._id);
 });
@@ -353,8 +354,8 @@ Parses uploaded JSON file and imports all employee data to company's collection.
 The data POSTed must be of type multipart/form-data and the form field name for the file input
 must be "employeeJSON".
 */
-
-router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager, async (req, res) => {
+router.post('/import', upload.single("employeeJSON"), verifyToken,
+    verifyManager, async (req, res) => {
     const Employee = require('../models/Employee');
 
     fs.readFile(req.file.path, async function (err, data) {
@@ -363,9 +364,7 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
 
-        checkValidTree(employees, res);
-
-        return res.status(200).send("valid data");
+        await checkValidTree(employees, res);
 
         //store individual employees
         for (i in employees) {
@@ -396,6 +395,7 @@ router.post('/import', upload.single("employeeJSON"), verifyToken, verifyManager
 
               try {
                   const savedEmployee = await employeeObj.save();
+                  checkImportComplete(employees.length);
               } catch (err) {
                   return res.status(500).send(err.message);
               }
@@ -442,4 +442,12 @@ router.post('/upload-image', upload.single("employeeImg"), verifyToken,
 
     });
 
+//Checks to make sure all imported employees are saved in database
+let counter = 0;
+const checkImportComplete = (numEmployees) => {
+  counter++;
+  if(counter >= numEmployees) {
+    updateCaches();
+  }
+}
 module.exports = router;
