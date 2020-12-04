@@ -9,11 +9,10 @@ const sanitizeJSON = (clusterData) => {
 /**
 * Checks whether or not the graph created by the input data forms a valid tree.
 */
-const checkValidTree = (employees, res) => {
+const checkValidTree = async (employees, res) => {
 
   try {
-    const tree = createTree(employees);
-
+    const tree = await createTree(employees);
     //the graph is one big cycle
     if(tree.length == 0) {
       return res.status(400).send("Malformed input data: Cycle detected (missing CEO)");
@@ -24,18 +23,22 @@ const checkValidTree = (employees, res) => {
       return res.status(400).send("Malformed input data: There is more than one employee without a manager.")
     }
   } catch (err) {
-    return res.status(400).send("Unable to form valid tree.");
+    return res.status(400).send("Unable to form tree.");
   }
 }
 
 /**
 * Generate's a tree structure of employees.
 * @param {[Object]} employees
-* @return {[Schema]} -- a tree structure containing Employee schema objects
+* @return {[Object]} -- a tree structure containing Employee objects
 */
-const createTree = (employees) => {
+const createTree = async (employees) => {
+    //get all the employees currently stored in the database
+    const Employee = require('./models/Employee');
+    const storedEmployees = await Employee.find();
+    const combinedEmployees = storedEmployees.concat(employees);
     let hashTable = Object.create(null);
-    employees.forEach((employeeData) => {
+    combinedEmployees.forEach((employeeData) => {
       //no need to store the password in the tree
       let employeeCopy = { ...employeeData, children: [] };
       delete employeeCopy.password;
@@ -43,7 +46,7 @@ const createTree = (employees) => {
       hashTable[employeeData.employeeId] = employeeCopy;
     });
     let employeeTree = [];
-    employees.forEach(employeeData => {
+    combinedEmployees.forEach(employeeData => {
         if (employeeData.managerId !== undefined && employeeData.managerId >= 0) {
             hashTable[employeeData.managerId].children.push(hashTable[employeeData.employeeId]);
         } else {
