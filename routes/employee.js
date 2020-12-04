@@ -33,7 +33,7 @@ const updateCaches = async () => {
     const employees = await Employee.find(); 
 
     flatCache = employees;
-    treeCache = await createTree(sanitizeJSON(employees), Employee);
+    treeCache = createTree(sanitizeJSON(employees));
 }
 
 const findLastEmployeeId = async () => {
@@ -364,7 +364,7 @@ router.post('/import', upload.single("employeeJSON"), verifyToken,
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
 
-        await checkValidTree(employees, res);
+        // await checkValidTree(employees, res);
 
         //store individual employees
         for (i in employees) {
