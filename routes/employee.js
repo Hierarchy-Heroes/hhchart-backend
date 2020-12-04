@@ -364,7 +364,14 @@ router.post('/import', upload.single("employeeJSON"), verifyToken,
         //delete uploaded file after importing data
         fs.unlinkSync(req.file.path);
 
-        // await checkValidTree(employees, res);
+        //get all the employees currently stored in the database
+        const storedEmployees = await Employee.find();
+        const combinedEmployees = storedEmployees.concat(employees);
+        const validTree = checkValidTree(combinedEmployees);
+
+        if(validTree.error) {
+          return res.status(400).send(validTree.message);
+        }
 
         //store individual employees
         for (i in employees) {

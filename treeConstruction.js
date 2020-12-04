@@ -9,28 +9,23 @@ const sanitizeJSON = (clusterData) => {
 /**
 * Checks whether or not the graph created by the input data forms a valid tree.
 */
-const checkValidTree = async (employees, res) => {
+const checkValidTree = (employees) => {
 
   try {
-    //get all the employees currently stored in the database
-    const Employee = require('./models/Employee');
-    const storedEmployees = await Employee.find();
-    const combinedEmployees = storedEmployees.concat(employees);
-    const tree = createTree(storedEmployees);
-    if(tree === undefined) {
-      return res.status(400).send("Unable to form tree: manager does not exist.");
-    }
+    const tree = createTree(employees);
     //the graph is one big cycle
     if(tree.length == 0) {
-      return res.status(400).send("Malformed input data: Cycle detected (missing CEO)");
+      return {error: true, message: "Malformed input data: Cycle detected (missing CEO)"};
     }
 
     //dangling employee
     if (tree.length > 1) {
-      return res.status(400).send("Malformed input data: There is more than one employee without a manager.")
+      return {error: true, message: "Malformed input data: There is more than one employee without a manager."};
     }
+
+    return {error: false};
   } catch (err) {
-    return res.status(400).send("Unable to form tree.");
+    return {error: true, message: "Unable to form tree."};
   }
 }
 
