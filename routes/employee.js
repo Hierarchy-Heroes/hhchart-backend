@@ -250,9 +250,10 @@ router.post('/transfer', verifyToken, verifyManager, async (req, res) => {
             if (err) {
                 return res.status(400).send("Removing request error: " + err.message);
             }
+
+            updateCaches();
         });
 
-        updateCaches();
         return res.status(200).send("Employee transfer complete.")
 
       } catch (err) {
@@ -295,9 +296,8 @@ router.post('/remove', verifyToken, verifyManager, async (req, res) => {
       if (err) {
           return res.status(400).send("Removing request error: " + err.message);
       }
+      updateCaches();
     });
-
-    updateCaches();
 
     return res.status(200).send("successfully removed employee with id: " + employeeToRemove._id);
 });
