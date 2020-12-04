@@ -10,16 +10,21 @@ const sanitizeJSON = (clusterData) => {
 * Checks whether or not the graph created by the input data forms a valid tree.
 */
 const checkValidTree = (employees, res) => {
-  const tree = createTree(employees);
 
-  //the graph is one big cycle
-  if(tree.length == 0) {
-    return res.status(400).send("Malformed input data: Cycle detected (missing CEO)");
-  }
+  try {
+    const tree = createTree(employees);
 
-  //dangling employee
-  if (tree.length > 1) {
-    return res.status(400).send("Malformed input data: There is more than one employee without a manager.")
+    //the graph is one big cycle
+    if(tree.length == 0) {
+      return res.status(400).send("Malformed input data: Cycle detected (missing CEO)");
+    }
+
+    //dangling employee
+    if (tree.length > 1) {
+      return res.status(400).send("Malformed input data: There is more than one employee without a manager.")
+    }
+  } catch (err) {
+    return res.status(400).send("Unable to form valid tree.");
   }
 }
 
